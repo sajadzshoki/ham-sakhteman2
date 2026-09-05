@@ -1,46 +1,11 @@
 import type {
   Announcement,
-  BuildingInfo,
   Charge,
   ServiceCategory,
   ServiceRequest,
-  Unit,
-  UserProfile,
 } from '~/types'
 
-/** تاریخ نسبی نسبت به امروز تا ماک‌ها همیشه تازه به نظر برسند */
-function daysAgo(days: number, hour = 9, minute = 0): Date {
-  const date = new Date()
-  date.setDate(date.getDate() - days)
-  date.setHours(hour, minute, 0, 0)
-  return date
-}
-
-function daysAhead(days: number, hour = 9, minute = 0): Date {
-  const date = new Date()
-  date.setDate(date.getDate() + days)
-  date.setHours(hour, minute, 0, 0)
-  return date
-}
-
-export const profile: UserProfile = {
-  name: 'سارا محمدی',
-  unitNumber: 5,
-  floor: 3,
-  phone: '09123456789',
-  role: 'resident',
-}
-
-export const building: BuildingInfo = {
-  name: 'ساختمان آسمان',
-  address: 'تهران، سعادت‌آباد، بلوار سرو غربی، پلاک ۱۲',
-  unitsCount: 12,
-  floorsCount: 6,
-  builtYear: '۱۳۹۵',
-  managerName: 'رضا احمدی',
-  managerPhone: '09121112233',
-  amenities: ['آسانسور', 'پارکینگ', 'انباری', 'لابی', 'دوربین مداربسته', 'سیستم اعلام حریق'],
-}
+/** محتوای نمایشی (اعلامیه‌ها، شارژ و خدمات) — داده‌های ساختمان در استور (`useAppStore`) نگهداری می‌شوند */
 
 export const announcements: Announcement[] = [
   {
@@ -97,17 +62,6 @@ export const charges: Charge[] = [
     amount: 1_200_000,
     status: 'paid',
   },
-]
-
-export const units: Unit[] = [
-  { id: 'u-1', number: 1, floor: 1, occupancy: 'tenant', residentName: 'حامد رضایی' },
-  { id: 'u-2', number: 2, floor: 1, occupancy: 'vacant' },
-  { id: 'u-3', number: 3, floor: 2, occupancy: 'owner', residentName: 'مریم کریمی' },
-  { id: 'u-4', number: 4, floor: 2, occupancy: 'tenant', residentName: 'علی موسوی' },
-  { id: 'u-5', number: 5, floor: 3, occupancy: 'owner', residentName: 'سارا محمدی' },
-  { id: 'u-6', number: 6, floor: 3, occupancy: 'owner', residentName: 'نادر شریفی' },
-  { id: 'u-7', number: 7, floor: 4, occupancy: 'tenant', residentName: 'زهرا حسینی' },
-  { id: 'u-8', number: 8, floor: 4, occupancy: 'vacant' },
 ]
 
 export interface ServiceCategoryMeta {

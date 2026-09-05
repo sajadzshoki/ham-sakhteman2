@@ -9,6 +9,8 @@ withDefaults(
     placeholder?: string
     icon?: string
     disabled?: boolean
+    /** جهت متن ورودی؛ برای شماره موبایل و کدها از «ltr» استفاده می‌شود */
+    dir?: 'rtl' | 'ltr'
   }>(),
   {
     label: undefined,
@@ -18,6 +20,7 @@ withDefaults(
     placeholder: undefined,
     icon: undefined,
     disabled: false,
+    dir: undefined,
   },
 )
 
@@ -32,6 +35,7 @@ const model = defineModel<string>({ default: '' })
       :placeholder="placeholder"
       :icon="icon"
       :disabled="disabled"
+      :dir="dir"
       size="lg"
       class="w-full"
     />

@@ -3,6 +3,7 @@ const { t } = useI18n()
 const route = useRoute()
 const nav = useAppNavigation()
 const { isDark, toggleTheme } = useTheme()
+const { user, isAuthenticated } = useAuth()
 </script>
 
 <template>
@@ -51,6 +52,7 @@ const { isDark, toggleTheme } = useTheme()
           @click="toggleTheme"
         />
         <UButton
+          v-if="isAuthenticated"
           color="neutral"
           variant="ghost"
           size="md"
@@ -60,6 +62,22 @@ const { isDark, toggleTheme } = useTheme()
         >
           <span class="absolute -top-0.5 -end-0.5 size-2.5 rounded-full bg-teal-500 ring-2 ring-white dark:ring-slate-950" />
         </UButton>
+        <NuxtLink
+          v-if="isAuthenticated && user"
+          to="/account"
+          class="ms-1"
+          :aria-label="t('nav.account')"
+        >
+          <UserAvatar :name="user.name" size="sm" />
+        </NuxtLink>
+        <UButton
+          v-else
+          color="primary"
+          variant="solid"
+          size="md"
+          label="ورود"
+          to="/auth/login"
+        />
       </div>
     </div>
   </header>

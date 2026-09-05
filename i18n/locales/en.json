@@ -40,6 +40,10 @@
     "info": "Info",
     "warning": "Important",
     "urgent": "Urgent",
-    "resident": "Resident"
+    "resident": "Resident",
+    "manager": "Building Manager",
+    "active": "Active",
+    "used": "Used",
+    "expired": "Expired"
   }
 }

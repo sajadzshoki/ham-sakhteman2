@@ -35,6 +35,13 @@ const statusPresets: Record<string, { color: BadgeColor; labelKey: string }> = {
   info: { color: 'info', labelKey: 'status.info' },
   warning: { color: 'warning', labelKey: 'status.warning' },
   urgent: { color: 'error', labelKey: 'status.urgent' },
+  // نقش اعضا
+  manager: { color: 'primary', labelKey: 'status.manager' },
+  resident: { color: 'info', labelKey: 'status.resident' },
+  // دعوت‌نامه‌ها
+  active: { color: 'success', labelKey: 'status.active' },
+  used: { color: 'neutral', labelKey: 'status.used' },
+  expired: { color: 'error', labelKey: 'status.expired' },
 }
 
 const preset = computed(() => statusPresets[props.status] ?? { color: 'neutral' as BadgeColor, labelKey: '' })
