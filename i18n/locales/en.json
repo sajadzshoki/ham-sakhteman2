@@ -1,0 +1,45 @@
+{
+  "app": {
+    "name": "HamSakhteman",
+    "tagline": "Smart building management"
+  },
+  "nav": {
+    "home": "Home",
+    "building": "Building",
+    "services": "Services",
+    "account": "My Account"
+  },
+  "common": {
+    "showAll": "Show all",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "close": "Close",
+    "retry": "Retry",
+    "soon": "This section is coming soon.",
+    "loading": "Loading…",
+    "required": "This field is required.",
+    "optional": "Optional",
+    "logout": "Log out",
+    "logoutDone": "You have been logged out.",
+    "themeDark": "Dark mode",
+    "themeDarkDescription": "Dark appearance for night use",
+    "appearance": "Appearance",
+    "appVersion": "Version {version} • Demo build"
+  },
+  "status": {
+    "paid": "Paid",
+    "pending": "Pending payment",
+    "overdue": "Overdue",
+    "inProgress": "In progress",
+    "done": "Done",
+    "canceled": "Canceled",
+    "owner": "Owner",
+    "tenant": "Tenant",
+    "vacant": "Vacant",
+    "info": "Info",
+    "warning": "Important",
+    "urgent": "Urgent",
+    "resident": "Resident"
+  }
+}

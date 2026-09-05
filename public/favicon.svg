@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0d9488"/>
+  <g fill="#ffffff">
+    <rect x="14" y="22" width="16" height="28" rx="2"/>
+    <rect x="34" y="12" width="16" height="38" rx="2"/>
+  </g>
+  <g fill="#0d9488">
+    <rect x="18" y="27" width="3.5" height="4" rx="1"/>
+    <rect x="24" y="27" width="3.5" height="4" rx="1"/>
+    <rect x="18" y="35" width="3.5" height="4" rx="1"/>
+    <rect x="24" y="35" width="3.5" height="4" rx="1"/>
+    <rect x="18" y="43" width="3.5" height="4" rx="1"/>
+    <rect x="24" y="43" width="3.5" height="4" rx="1"/>
+    <rect x="38" y="17" width="3.5" height="4" rx="1"/>
+    <rect x="44" y="17" width="3.5" height="4" rx="1"/>
+    <rect x="38" y="25" width="3.5" height="4" rx="1"/>
+    <rect x="44" y="25" width="3.5" height="4" rx="1"/>
+    <rect x="38" y="33" width="3.5" height="4" rx="1"/>
+    <rect x="44" y="33" width="3.5" height="4" rx="1"/>
+    <rect x="38" y="41" width="3.5" height="4" rx="1"/>
+    <rect x="44" y="41" width="3.5" height="4" rx="1"/>
+  </g>
+</svg>
