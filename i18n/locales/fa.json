@@ -1,0 +1,52 @@
+{
+  "app": {
+    "name": "هم‌ساختمان",
+    "tagline": "مدیریت هوشمند ساختمان"
+  },
+  "nav": {
+    "home": "خانه",
+    "building": "ساختمان",
+    "services": "خدمات",
+    "account": "حساب من"
+  },
+  "common": {
+    "showAll": "مشاهده همه",
+    "cancel": "انصراف",
+    "confirm": "تأیید",
+    "save": "ذخیره",
+    "close": "بستن",
+    "retry": "تلاش مجدد",
+    "soon": "این بخش به‌زودی فعال می‌شود.",
+    "loading": "در حال بارگذاری…",
+    "required": "این فیلد الزامی است.",
+    "optional": "اختیاری",
+    "logout": "خروج از حساب",
+    "logoutDone": "با موفقیت از حساب خارج شدید.",
+    "themeDark": "حالت تاریک",
+    "themeDarkDescription": "ظاهر تیره برای استفاده در شب",
+    "appearance": "نمایش",
+    "appVersion": "نسخه {version} • نسخه نمایشی"
+  },
+  "status": {
+    "paid": "پرداخت شده",
+    "pending": "در انتظار پرداخت",
+    "unpaid": "پرداخت نشده",
+    "overdue": "دیرکرد",
+    "inProgress": "در حال انجام",
+    "done": "انجام شد",
+    "canceled": "لغو شده",
+    "owner": "مالک",
+    "tenant": "مستأجر",
+    "vacant": "خالی",
+    "normal": "عادی",
+    "important": "مهم",
+    "new": "جدید",
+    "resolved": "حل شده",
+    "resident": "ساکن",
+    "manager": "مدیر ساختمان",
+    "active": "فعال",
+    "used": "استفاده شده",
+    "expired": "منقضی شده",
+    "superAdmin": "مدیر کل"
+  }
+}
