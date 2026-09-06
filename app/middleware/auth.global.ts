@@ -25,6 +25,16 @@ export default defineNuxtRouteMiddleware((to) => {
     return navigateTo('/auth/login')
   }
 
+  // اطلاعیه‌ها و گزارش مشکلات: نیازمند ورود و عضویت در ساختمان
+  if (to.path === '/announcements' || to.path.startsWith('/announcements/')
+    || to.path === '/problems' || to.path.startsWith('/problems/')) {
+    if (!user.value) return navigateTo('/auth/login')
+    if (!store.buildingOfUser(user.value)) return navigateTo('/building')
+    // ایجاد و ویرایش اطلاعیه فقط برای مدیر
+    const isAnnouncementWrite = to.path === '/announcements/new' || /^\/announcements\/[^/]+\/edit$/.test(to.path)
+    if (isAnnouncementWrite && user.value.role !== 'manager') return navigateTo('/announcements')
+  }
+
   // صفحات داخلی ساختمان
   if (to.path.startsWith('/building/') && to.path !== '/building') {
     if (!user.value) return navigateTo('/auth/login')

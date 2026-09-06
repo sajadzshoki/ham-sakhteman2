@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { announcements, charges } from '~/data/mock'
+import { charges, problemCategoryOf } from '~/data/mock'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -12,19 +12,59 @@ useSeoMeta({
 })
 
 const building = computed(() => store.buildingOfUser(user.value))
-const manager = computed(() => (building.value ? store.buildingManager(building.value.id) : null))
+const membership = computed(() => store.membershipOfUser(user.value))
+
+const unit = computed(() => {
+  const current = membership.value
+  if (!current?.unitId) return null
+  return store.buildingUnits(current.buildingId).find(item => item.id === current.unitId) ?? null
+})
 
 const firstName = computed(() => user.value?.name.split(' ')[0] ?? '')
 const todayLabel = formatDate(new Date(), 'weekday')
 
 const currentCharge = computed(() => charges.find(charge => charge.status === 'pending'))
 
-const quickActions = [
-  { label: 'پرداخت شارژ', icon: 'i-lucide-wallet', tint: 'bg-teal-50 text-teal-600 dark:bg-teal-400/10 dark:text-teal-300', to: '/account' },
-  { label: 'درخواست خدمات', icon: 'i-lucide-wrench', tint: 'bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-300', to: '/services' },
-  { label: 'ساختمان من', icon: 'i-lucide-building-2', tint: 'bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300', to: '/building' },
-  { label: 'اعضای ساختمان', icon: 'i-lucide-users', tint: 'bg-violet-50 text-violet-600 dark:bg-violet-400/10 dark:text-violet-300', to: '/building/members' },
-]
+/** دسترسی سریع بر اساس نقش — مدیر ابزار مدیریت دارد و ساکن ابزار گزارش و مشاهده */
+const quickActions = computed(() => {
+  if (user.value?.role === 'manager') {
+    return [
+      { label: 'ایجاد اطلاعیه', icon: 'i-lucide-megaphone', tint: 'bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300', to: '/announcements/new' },
+      { label: 'مشاهده مشکلات', icon: 'i-lucide-circle-alert', tint: 'bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-300', to: '/problems' },
+      { label: 'مدیریت ساختمان', icon: 'i-lucide-building-2', tint: 'bg-violet-50 text-violet-600 dark:bg-violet-400/10 dark:text-violet-300', to: '/building' },
+    ]
+  }
+  return [
+    { label: 'گزارش مشکل', icon: 'i-lucide-circle-alert', tint: 'bg-rose-50 text-rose-600 dark:bg-rose-400/10 dark:text-rose-300', to: '/problems/new' },
+    { label: 'مشاهده اطلاعیه‌ها', icon: 'i-lucide-megaphone', tint: 'bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300', to: '/announcements' },
+    { label: 'خدمات ساختمان', icon: 'i-lucide-concierge-bell', tint: 'bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-300', to: '/services' },
+  ]
+})
+
+const latestAnnouncements = computed(() =>
+  building.value ? store.buildingAnnouncements(building.value.id).slice(0, 3) : [],
+)
+
+/** مشکلات باز: مدیر همه را می‌بیند، ساکن فقط گزارش‌های خودش را */
+const openProblems = computed(() => {
+  if (!building.value || !user.value) return []
+  const items = user.value.role === 'manager'
+    ? store.openBuildingProblems(building.value.id)
+    : store.problemsOfUser(building.value.id, user.value.id).filter(item => item.status !== 'resolved')
+  return items.slice(0, 3)
+})
+
+const openProblemsCount = computed(() => {
+  if (!building.value || !user.value) return 0
+  return user.value.role === 'manager'
+    ? store.openBuildingProblems(building.value.id).length
+    : store.problemsOfUser(building.value.id, user.value.id).filter(item => item.status !== 'resolved').length
+})
+
+const unitLabel = computed(() => {
+  if (!unit.value) return null
+  return `واحد ${toPersianDigits(unit.value.number)} • طبقه ${toPersianDigits(unit.value.floor)}`
+})
 
 const features = [
   { title: 'مدیریت شارژ', description: 'پرداخت شفاف و به‌موقع شارژ ماهانه', icon: 'i-lucide-wallet', tint: 'bg-teal-50 text-teal-600 dark:bg-teal-400/10 dark:text-teal-300' },
@@ -35,7 +75,7 @@ const features = [
 
 <template>
   <div class="space-y-7">
-    <!-- داشبورد کاربر دارای ساختمان -->
+    <!-- داشبورد کاربر دارای ساختمان: الان در ساختمان چه خبر است؟ -->
     <template v-if="isAuthenticated && building">
       <!-- خوش‌آمدگویی -->
       <section class="flex items-center justify-between gap-3">
@@ -45,10 +85,155 @@ const features = [
             سلام، {{ firstName }} 👋
           </h1>
           <p class="mt-1 truncate text-sm text-slate-500 dark:text-slate-400">
-            به «{{ building.name }}» خوش آمدید
+            در «{{ building.name }}» چه خبر؟
           </p>
         </div>
         <UserAvatar :name="user?.name ?? ''" size="lg" />
+      </section>
+
+      <!-- ساختمان و واحد فعلی -->
+      <section>
+        <AppCard>
+          <div class="flex items-center gap-3">
+            <span class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-400/10 dark:text-teal-300">
+              <Icon name="i-lucide-building-2" class="size-5" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <p class="truncate text-sm font-bold text-slate-800 dark:text-slate-100">{{ building.name }}</p>
+                <StatusBadge v-if="user?.role === 'manager'" status="manager" />
+              </div>
+              <p class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                <template v-if="unit && user?.role !== 'manager'">
+                  {{ unitLabel }}
+                  <template v-if="membership?.unitStatus">
+                    • {{ membership.unitStatus === 'owner' ? 'مالک' : 'مستأجر' }}
+                  </template>
+                </template>
+                <template v-else-if="user?.role === 'manager'">
+                  مدیر ساختمان
+                </template>
+                <template v-else>
+                  بدون واحد تخصیص‌یافته
+                </template>
+              </p>
+            </div>
+            <NuxtLink
+              to="/building"
+              class="flex shrink-0 items-center gap-0.5 text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-300"
+            >
+              جزئیات
+              <Icon name="i-lucide-chevron-left" class="size-3.5" />
+            </NuxtLink>
+          </div>
+        </AppCard>
+      </section>
+
+      <!-- دسترسی سریع بر اساس نقش -->
+      <section>
+        <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
+          <NuxtLink
+            v-for="action in quickActions"
+            :key="action.label"
+            :to="action.to"
+            class="flex flex-col items-center gap-1.5 rounded-2xl bg-white px-1 py-3.5 shadow-sm ring-1 ring-slate-950/5 transition-shadow hover:shadow-md dark:bg-slate-900 dark:ring-white/10"
+          >
+            <span class="flex size-10 items-center justify-center rounded-xl" :class="action.tint">
+              <Icon :name="action.icon" class="size-5" />
+            </span>
+            <span class="text-center text-[11px] leading-4 font-semibold text-slate-600 dark:text-slate-300">
+              {{ action.label }}
+            </span>
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- تازه‌ترین اطلاعیه‌ها -->
+      <section>
+        <SectionHeader title="تازه‌ترین اطلاعیه‌ها" :action="{ label: t('common.showAll'), to: '/announcements' }" />
+        <div v-if="latestAnnouncements.length" class="space-y-3">
+          <NuxtLink
+            v-for="announcement in latestAnnouncements"
+            :key="announcement.id"
+            :to="`/announcements/${announcement.id}`"
+            class="block"
+          >
+            <AppCard as="article" hover>
+              <div class="flex items-center justify-between gap-2">
+                <StatusBadge :status="announcement.importance" />
+                <time class="text-[11px] text-slate-400 dark:text-slate-500">
+                  {{ formatRelative(announcement.createdAt) }}
+                </time>
+              </div>
+              <h3 class="mt-2.5 text-sm font-bold text-slate-800 dark:text-slate-100">
+                {{ announcement.title }}
+              </h3>
+              <p class="mt-1 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                {{ announcement.body }}
+              </p>
+            </AppCard>
+          </NuxtLink>
+        </div>
+        <EmptyState
+          v-else
+          icon="i-lucide-megaphone"
+          title="هنوز اطلاعیه‌ای ثبت نشده"
+          :description="user?.role === 'manager' ? 'اولین اطلاعیه ساختمان خود را ثبت کنید تا ساکنین در جریان قرار بگیرند.' : 'به‌زودی اطلاعیه‌های ساختمان اینجا نمایش داده می‌شود.'"
+        >
+          <template v-if="user?.role === 'manager'" #action>
+            <UButton color="primary" variant="solid" size="md" label="ایجاد اطلاعیه" icon="i-lucide-plus" @click="router.push('/announcements/new')" />
+          </template>
+        </EmptyState>
+      </section>
+
+      <!-- مشکلات باز -->
+      <section>
+        <SectionHeader
+          :title="user?.role === 'manager' ? 'مشکلات در انتظار رسیدگی' : 'گزارش‌های پیگیری‌نشده شما'"
+          :action="{ label: t('common.showAll'), to: '/problems' }"
+        />
+        <div v-if="openProblems.length" class="space-y-3">
+          <NuxtLink
+            v-for="problem in openProblems"
+            :key="problem.id"
+            :to="`/problems/${problem.id}`"
+            class="block"
+          >
+            <AppCard as="article" hover>
+              <div class="flex items-start gap-3">
+                <span class="flex size-10 shrink-0 items-center justify-center rounded-xl" :class="problemCategoryOf(problem.category).tint">
+                  <Icon :name="problemCategoryOf(problem.category).icon" class="size-5" />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="truncate text-sm font-bold text-slate-800 dark:text-slate-100">{{ problem.title }}</p>
+                    <StatusBadge :status="problem.status" :label="problem.status === 'in-progress' ? 'در حال پیگیری' : undefined" />
+                  </div>
+                  <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {{ problemCategoryOf(problem.category).label }}
+                    •
+                    {{ formatRelative(problem.createdAt) }}
+                    <template v-if="user?.role === 'manager'">
+                      • {{ problem.reportedByName }}
+                    </template>
+                  </p>
+                </div>
+              </div>
+            </AppCard>
+          </NuxtLink>
+        </div>
+        <EmptyState
+          v-else
+          icon="i-lucide-circle-check"
+          title="مشکل بازی وجود ندارد"
+          :description="user?.role === 'manager'
+            ? 'همه گزارش‌های ثبت‌شده رسیدگی شده‌اند.'
+            : (openProblemsCount === 0 ? 'اگر مشکلی در ساختمان دیدید، همین‌جا گزارش دهید.' : '')"
+        >
+          <template v-if="user?.role !== 'manager'" #action>
+            <UButton color="primary" variant="soft" size="md" label="گزارش مشکل" icon="i-lucide-plus" @click="router.push('/problems/new')" />
+          </template>
+        </EmptyState>
       </section>
 
       <!-- کارت شارژ ماه جاری -->
@@ -77,73 +262,6 @@ const features = [
         >
           پرداخت آنلاین شارژ
         </button>
-      </section>
-
-      <!-- دسترسی سریع -->
-      <section>
-        <div class="grid grid-cols-4 gap-2.5 sm:gap-3">
-          <NuxtLink
-            v-for="action in quickActions"
-            :key="action.label"
-            :to="action.to"
-            class="flex flex-col items-center gap-1.5 rounded-2xl bg-white px-1 py-3 shadow-sm ring-1 ring-slate-950/5 transition-shadow hover:shadow-md dark:bg-slate-900 dark:ring-white/10"
-          >
-            <span class="flex size-10 items-center justify-center rounded-xl" :class="action.tint">
-              <Icon :name="action.icon" class="size-5" />
-            </span>
-            <span class="text-center text-[11px] leading-4 font-semibold text-slate-600 dark:text-slate-300">
-              {{ action.label }}
-            </span>
-          </NuxtLink>
-        </div>
-      </section>
-
-      <!-- اطلاعیه‌ها -->
-      <section>
-        <SectionHeader title="اطلاعیه‌های ساختمان" />
-        <div class="space-y-3">
-          <AppCard v-for="announcement in announcements" :key="announcement.id" as="article" hover>
-            <div class="flex items-center justify-between gap-2">
-              <StatusBadge :status="announcement.category" />
-              <time class="text-[11px] text-slate-400 dark:text-slate-500">
-                {{ formatRelative(announcement.publishedAt) }}
-              </time>
-            </div>
-            <h3 class="mt-2.5 flex items-center gap-1.5 text-sm font-bold text-slate-800 dark:text-slate-100">
-              <Icon v-if="announcement.pinned" name="i-lucide-pin" class="size-3.5 text-teal-500" />
-              {{ announcement.title }}
-            </h3>
-            <p class="mt-1 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-              {{ announcement.body }}
-            </p>
-          </AppCard>
-        </div>
-      </section>
-
-      <!-- مدیر ساختمان -->
-      <section v-if="manager">
-        <AppCard>
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex min-w-0 items-center gap-3">
-              <UserAvatar :name="manager.name" size="md" />
-              <div class="min-w-0">
-                <p class="truncate text-sm font-bold text-slate-800 dark:text-slate-100">
-                  {{ manager.name }}
-                </p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">مدیر ساختمان</p>
-              </div>
-            </div>
-            <UButton
-              v-if="manager.phone"
-              color="primary"
-              variant="soft"
-              size="md"
-              icon="i-lucide-phone"
-              label="تماس"
-              :to="`tel:${manager.phone}`"
-            />
-          </div>
-        </AppCard>
       </section>
     </template>
 

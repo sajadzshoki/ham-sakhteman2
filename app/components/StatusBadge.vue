@@ -31,10 +31,12 @@ const statusPresets: Record<string, { color: BadgeColor; labelKey: string }> = {
   owner: { color: 'primary', labelKey: 'status.owner' },
   tenant: { color: 'info', labelKey: 'status.tenant' },
   vacant: { color: 'neutral', labelKey: 'status.vacant' },
-  // اطلاعیه‌ها
-  info: { color: 'info', labelKey: 'status.info' },
-  warning: { color: 'warning', labelKey: 'status.warning' },
-  urgent: { color: 'error', labelKey: 'status.urgent' },
+  // اطلاعیه‌ها (اهمیت)
+  normal: { color: 'neutral', labelKey: 'status.normal' },
+  important: { color: 'warning', labelKey: 'status.important' },
+  // گزارش مشکلات
+  new: { color: 'error', labelKey: 'status.new' },
+  resolved: { color: 'success', labelKey: 'status.resolved' },
   // نقش اعضا
   manager: { color: 'primary', labelKey: 'status.manager' },
   resident: { color: 'info', labelKey: 'status.resident' },

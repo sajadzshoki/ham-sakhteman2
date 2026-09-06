@@ -1,4 +1,4 @@
-import type { Building, BuildingMember, BuildingUnit, Invitation } from '~/types'
+import type { Announcement, Building, BuildingMember, BuildingUnit, Invitation, ProblemReport } from '~/types'
 
 /**
  * دیتای دمو: با اولین بازدید بذرپاشی می‌شود تا حساب‌های «مدیر دمو» و «ساکن دمو»
@@ -122,5 +122,95 @@ export const seedInvitations: Invitation[] = [
     createdAt: daysAgo(25).toISOString(),
     expiresAt: daysAhead(340).toISOString(),
     status: 'active',
+  },
+]
+
+// ——— اطلاعیه‌ها و گزارش‌های دمو ———
+
+/** بنر سبک‌وزن SVG برای اطلاعیه نمونه (بدون فایل خارجی؛ عمداً بسیار کوچک تا کوکی از حد مجاز عبور نکند) */
+const seedBannerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="320"><rect width="640" height="320" fill="#0d9488"/><g fill="#ccfbf1" opacity=".95"><rect x="270" y="100" width="100" height="140" rx="8"/><rect x="292" y="122" width="16" height="16" fill="#0d9488"/><rect x="332" y="122" width="16" height="16" fill="#0d9488"/><rect x="292" y="156" width="16" height="16" fill="#0d9488"/><rect x="332" y="156" width="16" height="16" fill="#0d9488"/><rect x="306" y="198" width="28" height="42" fill="#0d9488"/><rect x="296" y="70" width="48" height="34" rx="4"/></g></svg>`
+
+export const seedAnnouncementBanner = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(seedBannerSvg)}`
+
+export const seedAnnouncements: Announcement[] = [
+  {
+    id: 'ann-s1',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'سرویس دوره‌ای آسانسور',
+    body: 'آسانسور ساختمان روز شنبه از ساعت ۹ تا ۱۲ برای سرویس دوره‌ای خاموش خواهد بود. لطفاً در این بازه از پله‌ها استفاده کنید و در صورت نیاز به جابه‌جایی وسایل سنگین، با سرایداری هماهنگ کنید.',
+    importance: 'important',
+    image: seedAnnouncementBanner,
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(1, 10, 30).toISOString(),
+  },
+  {
+    id: 'ann-s2',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'جلسه عمومی ماهانه ساکنین',
+    body: 'جلسه عمومی ماه با موضوع بودجه تعمیرات زمستان، جمعه آینده ساعت ۱۸:۳۰ در لابی برگزار می‌شود. حضور همه ساکنین گرامی است.',
+    importance: 'normal',
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(3, 17).toISOString(),
+  },
+  {
+    id: 'ann-s3',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'نظافت فصلی مشاعات',
+    body: 'برنامه نظافت فصلی راهروها و پارکینگ از هفته آینده آغاز می‌شود. در صورت نیاز به جابه‌جایی وسایل پارکینگ، با سرایداری هماهنگ کنید.',
+    importance: 'normal',
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(5, 12).toISOString(),
+  },
+]
+
+export const seedProblems: ProblemReport[] = [
+  {
+    id: 'pr-s1',
+    buildingId: DEMO_BUILDING_ID,
+    category: 'water',
+    title: 'چکه شیر آب پارکینگ',
+    description: 'شیر آب گوشه پارکینگ چکه می‌کند و کف پارکینگ خیس شده. لطفاً برای تعمیر اقدام شود.',
+    status: 'in-progress',
+    reportedBy: DEMO_RESIDENT_ID,
+    reportedByName: 'سارا محمدی',
+    createdAt: daysAgo(2, 9, 15).toISOString(),
+    updatedAt: daysAgo(1, 11).toISOString(),
+  },
+  {
+    id: 'pr-s2',
+    buildingId: DEMO_BUILDING_ID,
+    category: 'elevator',
+    title: 'صدای غیرعادی کابین آسانسور',
+    description: 'کابین آسانسور هنگام حرکت بین طبقات ۳ و ۴ صدای سایش می‌دهد. نیاز به بازدید شرکت نگهداری دارد.',
+    status: 'new',
+    reportedBy: DEMO_RESIDENT_ID,
+    reportedByName: 'سارا محمدی',
+    createdAt: daysAgo(1, 16, 45).toISOString(),
+  },
+  {
+    id: 'pr-s3',
+    buildingId: DEMO_BUILDING_ID,
+    category: 'cleaning',
+    title: 'نظافت راهرو طبقه ۵',
+    description: 'راهرو طبقه ۵ نیاز به نظافت دارد؛ گرد و خاک روی نرده‌ها جمع شده است.',
+    status: 'resolved',
+    reportedBy: DEMO_RESIDENT_ID,
+    reportedByName: 'سارا محمدی',
+    createdAt: daysAgo(9, 13).toISOString(),
+    updatedAt: daysAgo(6, 10).toISOString(),
+  },
+  {
+    id: 'pr-s4',
+    buildingId: DEMO_BUILDING_ID,
+    category: 'electricity',
+    title: 'چراغ سنسوردار راهرو طبقه ۳',
+    description: 'چراغ سنسوردار راهرو طبقه ۳ با حرکت روشن نمی‌شود و همیشه خاموش است.',
+    status: 'new',
+    reportedBy: DEMO_MANAGER_ID,
+    reportedByName: 'رضا احمدی',
+    createdAt: daysAgo(4, 8, 20).toISOString(),
   },
 ]

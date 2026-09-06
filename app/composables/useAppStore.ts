@@ -1,18 +1,25 @@
 import type {
+  Announcement,
+  AnnouncementImportance,
   AuthUser,
   Building,
   BuildingMember,
   BuildingUnit,
   Invitation,
   MemberRole,
+  ProblemCategory,
+  ProblemReport,
+  ProblemStatus,
   UnitStatus,
 } from '~/types'
 import {
   DEMO_MANAGER_ID,
   DEMO_RESIDENT_ID,
+  seedAnnouncements,
   seedBuildings,
   seedInvitations,
   seedMembers,
+  seedProblems,
   seedUnits,
 } from '~/data/seed'
 
@@ -27,6 +34,8 @@ export function useAppStore() {
   const units = refs.units
   const members = refs.members
   const invitations = refs.invitations
+  const announcements = refs.announcements
+  const problems = refs.problems
   const seeded = refs.seeded
 
   // ——— بذرپاشی دیتای دمو ———
@@ -59,6 +68,8 @@ export function useAppStore() {
     units.value = [...seedUnits]
     members.value = [...seedMembers]
     invitations.value = [...seedInvitations]
+    announcements.value = [...seedAnnouncements]
+    problems.value = [...seedProblems]
     seeded.value = true
   }
 
@@ -279,11 +290,106 @@ export function useAppStore() {
     return { ok: true, building }
   }
 
+  // ——— اطلاعیه‌ها ———
+
+  const sortByNewest = <T extends { createdAt: string }>(items: T[]) =>
+    [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+  const buildingAnnouncements = (buildingId: string) =>
+    sortByNewest(announcements.value.filter(item => item.buildingId === buildingId))
+
+  const getAnnouncement = (id: string) =>
+    announcements.value.find(item => item.id === id) ?? null
+
+  function createAnnouncement(
+    buildingId: string,
+    input: { title: string; body: string; importance: AnnouncementImportance; image?: string },
+    author: { id: string; name: string },
+  ): Announcement {
+    const announcement: Announcement = {
+      id: createId('ann'),
+      buildingId,
+      title: input.title.trim(),
+      body: input.body.trim(),
+      importance: input.importance,
+      image: input.image || undefined,
+      createdBy: author.id,
+      createdByName: author.name,
+      createdAt: new Date().toISOString(),
+    }
+    announcements.value = [announcement, ...announcements.value]
+    return announcement
+  }
+
+  function updateAnnouncement(
+    id: string,
+    patch: Partial<Pick<Announcement, 'title' | 'body' | 'importance' | 'image'>>,
+  ) {
+    announcements.value = announcements.value.map((item) => {
+      if (item.id !== id) return item
+      const next = { ...item, ...patch, updatedAt: new Date().toISOString() }
+      if (!next.image) delete next.image
+      return next
+    })
+  }
+
+  function removeAnnouncement(id: string) {
+    announcements.value = announcements.value.filter(item => item.id !== id)
+  }
+
+  // ——— گزارش مشکلات ———
+
+  const buildingProblems = (buildingId: string) =>
+    sortByNewest(problems.value.filter(item => item.buildingId === buildingId))
+
+  const problemsOfUser = (buildingId: string, userId: string) =>
+    buildingProblems(buildingId).filter(item => item.reportedBy === userId)
+
+  const openBuildingProblems = (buildingId: string) =>
+    buildingProblems(buildingId).filter(item => item.status !== 'resolved')
+
+  const getProblem = (id: string) =>
+    problems.value.find(item => item.id === id) ?? null
+
+  function createProblemReport(
+    buildingId: string,
+    input: { category: ProblemCategory; title: string; description: string; image?: string },
+    reporter: { id: string; name: string },
+  ): ProblemReport {
+    const report: ProblemReport = {
+      id: createId('pr'),
+      buildingId,
+      category: input.category,
+      title: input.title.trim(),
+      description: input.description.trim(),
+      image: input.image || undefined,
+      status: 'new',
+      reportedBy: reporter.id,
+      reportedByName: reporter.name,
+      createdAt: new Date().toISOString(),
+    }
+    problems.value = [report, ...problems.value]
+    return report
+  }
+
+  function updateProblemStatus(id: string, status: ProblemStatus) {
+    problems.value = problems.value.map((item) => {
+      if (item.id !== id) return item
+      return { ...item, status, updatedAt: new Date().toISOString() }
+    })
+  }
+
+  function removeProblem(id: string) {
+    problems.value = problems.value.filter(item => item.id !== id)
+  }
+
   return {
     buildings,
     units,
     members,
     invitations,
+    announcements,
+    problems,
     ensureSeeded,
     membershipOfUser,
     buildingOfUser,
@@ -308,5 +414,17 @@ export function useAppStore() {
     findInvitation,
     invitationDisplayStatus,
     joinWithInvitation,
+    buildingAnnouncements,
+    getAnnouncement,
+    createAnnouncement,
+    updateAnnouncement,
+    removeAnnouncement,
+    buildingProblems,
+    problemsOfUser,
+    openBuildingProblems,
+    getProblem,
+    createProblemReport,
+    updateProblemStatus,
+    removeProblem,
   }
 }

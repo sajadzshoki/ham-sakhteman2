@@ -1,19 +1,7 @@
-// ——— اعلان‌ها و شارژ ———
+// ——— شارژ ———
 
 /** وضعیت پرداخت شارژ */
 export type ChargeStatus = 'paid' | 'pending' | 'overdue'
-
-/** دسته اطلاعیه */
-export type AnnouncementCategory = 'info' | 'warning' | 'urgent'
-
-export interface Announcement {
-  id: string
-  title: string
-  body: string
-  category: AnnouncementCategory
-  publishedAt: Date
-  pinned?: boolean
-}
 
 export interface Charge {
   id: string
@@ -22,6 +10,58 @@ export interface Charge {
   amount: number
   status: ChargeStatus
   dueAt?: Date
+}
+
+// ——— اطلاعیه‌ها ———
+
+/** اهمیت اطلاعیه */
+export type AnnouncementImportance = 'normal' | 'important'
+
+export interface Announcement {
+  id: string
+  buildingId: string
+  title: string
+  body: string
+  importance: AnnouncementImportance
+  /**
+   * کلید مرجع تصویر (با پیشوند `img:`) که خود تصویر در حافظه محلی مرورگر
+   * نگهداری می‌شود — کوکی‌ها ظرفیت محدودی دارند.
+   */
+  image?: string
+  createdBy: string
+  createdByName: string
+  createdAt: string
+  updatedAt?: string
+}
+
+// ——— گزارش مشکلات ———
+
+/** دسته‌بندی مشکل گزارش‌شده */
+export type ProblemCategory =
+  | 'water'
+  | 'electricity'
+  | 'elevator'
+  | 'gas'
+  | 'common'
+  | 'cleaning'
+  | 'other'
+
+/** وضعیت رسیدگی به گزارش مشکل */
+export type ProblemStatus = 'new' | 'in-progress' | 'resolved'
+
+export interface ProblemReport {
+  id: string
+  buildingId: string
+  category: ProblemCategory
+  title: string
+  description: string
+  /** کلید مرجع تصویر مانند اطلاعیه‌ها */
+  image?: string
+  status: ProblemStatus
+  reportedBy: string
+  reportedByName: string
+  createdAt: string
+  updatedAt?: string
 }
 
 // ——— خدمات ———

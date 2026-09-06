@@ -1,43 +1,12 @@
 import type {
-  Announcement,
   Charge,
+  ProblemCategory,
+  ProblemStatus,
   ServiceCategory,
   ServiceRequest,
 } from '~/types'
 
-/** محتوای نمایشی (اعلامیه‌ها، شارژ و خدمات) — داده‌های ساختمان در استور (`useAppStore`) نگهداری می‌شوند */
-
-export const announcements: Announcement[] = [
-  {
-    id: 'ann-1',
-    title: 'سرویس دوره‌ای آسانسور',
-    body: 'آسانسور ساختمان روز شنبه از ساعت ۹ تا ۱۲ برای سرویس دوره‌ای خاموش خواهد بود. لطفا از پله‌ها استفاده کنید.',
-    category: 'warning',
-    publishedAt: daysAgo(1, 10, 30),
-    pinned: true,
-  },
-  {
-    id: 'ann-2',
-    title: 'جلسه عمومی ماهانه ساکنین',
-    body: 'جلسه عمومی ماه با موضوع بودجه تعمیرات زمستان، جمعه آینده ساعت ۱۸:۳۰ در لابی برگزار می‌شود. حضور همه ساکنین گرامی است.',
-    category: 'info',
-    publishedAt: daysAgo(2, 17),
-  },
-  {
-    id: 'ann-3',
-    title: 'قطع موقت آب برای شست‌وشوی مخزن',
-    body: 'روز دوشنبه از ساعت ۸ تا ۱۴ آب ساختمان به دلیل شست‌وشوی مخزن اصلی قطع خواهد بود. لطفاً ذخیره آب کافی داشته باشید.',
-    category: 'urgent',
-    publishedAt: daysAgo(3, 8, 15),
-  },
-  {
-    id: 'ann-4',
-    title: 'نظافت فصلی مشاعات',
-    body: 'برنامه نظافت فصلی راهروها و پارکینگ از هفته آینده آغاز می‌شود. در صورت نیاز به جابه‌جایی وسایل پارکینگ، با سرایداری هماهنگ کنید.',
-    category: 'info',
-    publishedAt: daysAgo(5, 12),
-  },
-]
+/** محتوای نمایشی (شارژ و خدمات) و متادیتای دسته‌بندی‌ها — داده‌های ساختمان، اطلاعیه‌ها و گزارش‌ها در استور (`useAppStore`) نگهداری می‌شوند */
 
 export const charges: Charge[] = [
   {
@@ -111,4 +80,42 @@ export const serviceRequests: ServiceRequest[] = [
     status: 'done',
     createdAt: daysAgo(15, 10),
   },
+]
+
+// ——— دسته‌بندی مشکلات ———
+
+export interface ProblemCategoryMeta {
+  id: ProblemCategory
+  label: string
+  icon: string
+  tint: string
+}
+
+/** fallback برای حالتی که دسته‌ای پیدا نشود (عملاً رخ نمی‌دهد؛ همه دسته‌ها تعریف شده‌اند) */
+const OTHER_CATEGORY: ProblemCategoryMeta = {
+  id: 'other',
+  label: 'سایر',
+  icon: 'i-lucide-ellipsis',
+  tint: 'bg-slate-100 text-slate-600 dark:bg-slate-400/10 dark:text-slate-300',
+}
+
+export const problemCategories: ProblemCategoryMeta[] = [
+  { id: 'water', label: 'آب', icon: 'i-lucide-droplets', tint: 'bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-300' },
+  { id: 'electricity', label: 'برق', icon: 'i-lucide-zap', tint: 'bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300' },
+  { id: 'elevator', label: 'آسانسور', icon: 'i-lucide-move-vertical', tint: 'bg-violet-50 text-violet-600 dark:bg-violet-400/10 dark:text-violet-300' },
+  { id: 'gas', label: 'گاز', icon: 'i-lucide-flame', tint: 'bg-orange-50 text-orange-600 dark:bg-orange-400/10 dark:text-orange-300' },
+  { id: 'common', label: 'مشاعات', icon: 'i-lucide-door-open', tint: 'bg-teal-50 text-teal-600 dark:bg-teal-400/10 dark:text-teal-300' },
+  { id: 'cleaning', label: 'نظافت', icon: 'i-lucide-sparkles', tint: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-300' },
+  OTHER_CATEGORY,
+]
+
+export const problemCategoryOf = (id: ProblemCategory): ProblemCategoryMeta =>
+  problemCategories.find(category => category.id === id) ?? OTHER_CATEGORY
+
+/** ترتیب و برچسب وضعیت‌های گزارش برای فیلترها */
+export const problemStatusFilters: { id: 'all' | ProblemStatus, label: string }[] = [
+  { id: 'all', label: 'همه' },
+  { id: 'new', label: 'جدید' },
+  { id: 'in-progress', label: 'در حال پیگیری' },
+  { id: 'resolved', label: 'حل شده' },
 ]
