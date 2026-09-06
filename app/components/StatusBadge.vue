@@ -22,6 +22,7 @@ const statusPresets: Record<string, { color: BadgeColor; labelKey: string }> = {
   // پرداخت‌ها
   paid: { color: 'success', labelKey: 'status.paid' },
   pending: { color: 'warning', labelKey: 'status.pending' },
+  unpaid: { color: 'warning', labelKey: 'status.unpaid' },
   overdue: { color: 'error', labelKey: 'status.overdue' },
   // درخواست‌های خدمات
   'in-progress': { color: 'info', labelKey: 'status.inProgress' },

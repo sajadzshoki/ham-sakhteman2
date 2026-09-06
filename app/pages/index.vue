@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { charges, problemCategoryOf } from '~/data/mock'
+import { problemCategoryOf } from '~/data/mock'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -23,7 +23,29 @@ const unit = computed(() => {
 const firstName = computed(() => user.value?.name.split(' ')[0] ?? '')
 const todayLabel = formatDate(new Date(), 'weekday')
 
-const currentCharge = computed(() => charges.find(charge => charge.status === 'pending'))
+// ——— وضعیت مالی برای داشبورد ———
+
+/** اولین شارژ پرداخت‌نشده/دیرکردِ ساکن (نزدیک‌ترین سررسید) */
+const nextDueCharge = computed(() => {
+  if (!building.value || !membership.value) return null
+  return store.dueChargesForMember(building.value.id, membership.value.id)[0] ?? null
+})
+
+const nextDueStatus = computed(() => {
+  if (!nextDueCharge.value || !membership.value) return 'unpaid'
+  return store.chargeStatusFor(nextDueCharge.value, membership.value.id)
+})
+
+const dueCount = computed(() => {
+  if (!building.value || !membership.value) return 0
+  return store.dueChargesForMember(building.value.id, membership.value.id).length
+})
+
+/** خلاصه مالی برای داشبورد مدیر */
+const managerSummary = computed(() => {
+  if (!building.value || user.value?.role !== 'manager') return null
+  return store.financialSummary(building.value.id)
+})
 
 /** دسترسی سریع بر اساس نقش — مدیر ابزار مدیریت دارد و ساکن ابزار گزارش و مشاهده */
 const quickActions = computed(() => {
@@ -236,32 +258,105 @@ const features = [
         </EmptyState>
       </section>
 
-      <!-- کارت شارژ ماه جاری -->
+      <!-- داشبورد مالی مدیر: مانده، درآمد و هزینه -->
       <section
-        v-if="currentCharge"
+        v-if="user?.role === 'manager' && managerSummary"
         class="space-y-4 rounded-2xl bg-teal-600 p-5 text-white shadow-md shadow-teal-600/20"
       >
         <div class="flex items-center justify-between gap-2">
-          <p class="text-sm font-medium text-teal-50">{{ currentCharge.title }}</p>
-          <span class="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold">
-            {{ t('status.pending') }}
+          <p class="flex items-center gap-1.5 text-sm font-medium text-teal-50">
+            <Icon name="i-lucide-wallet" class="size-4" />
+            نمای مالی ساختمان
+          </p>
+          <span
+            v-if="managerSummary.unpaidItems > 0"
+            class="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold"
+          >
+            {{ toPersianDigits(managerSummary.unpaidItems) }} سهم پرداخت‌نشده
+          </span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="rounded-xl bg-white/10 p-3">
+            <p class="text-[11px] text-teal-100">درآمد شارژ</p>
+            <p class="mt-1 text-sm font-extrabold tracking-tight">{{ formatAmount(managerSummary.income) }}</p>
+          </div>
+          <div class="rounded-xl bg-white/10 p-3">
+            <p class="text-[11px] text-teal-100">هزینه‌ها</p>
+            <p class="mt-1 text-sm font-extrabold tracking-tight">{{ formatAmount(managerSummary.expensesTotal) }}</p>
+          </div>
+          <div class="rounded-xl bg-white/10 p-3">
+            <p class="text-[11px] text-teal-100">مانده</p>
+            <p class="mt-1 text-sm font-extrabold tracking-tight">{{ formatAmount(Math.abs(managerSummary.balance)) }}</p>
+          </div>
+        </div>
+        <UButton
+          color="neutral"
+          variant="solid"
+          size="md"
+          block
+          label="شفافیت مالی ساختمان"
+          icon="i-lucide-pie-chart"
+          class="bg-white text-teal-700 hover:bg-teal-50"
+          @click="router.push('/finances')"
+        />
+      </section>
+
+      <!-- کارت شارژ ساکن: بدهی فعال یا حساب تسویه -->
+      <section
+        v-else-if="user?.role !== 'manager' && nextDueCharge"
+        class="space-y-4 rounded-2xl bg-teal-600 p-5 text-white shadow-md shadow-teal-600/20"
+      >
+        <div class="flex items-center justify-between gap-2">
+          <p class="min-w-0 truncate text-sm font-medium text-teal-50">
+            {{ nextDueCharge.title }} • {{ nextDueCharge.period }}
+          </p>
+          <span
+            class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold"
+            :class="nextDueStatus === 'overdue' ? 'bg-red-400/90 text-white' : 'bg-white/15'"
+          >
+            {{ nextDueStatus === 'overdue' ? t('status.overdue') : t('status.unpaid') }}
           </span>
         </div>
         <div class="space-y-1">
           <p class="text-2xl font-extrabold tracking-tight">
-            {{ formatAmount(currentCharge.amount) }}
+            {{ formatAmount(nextDueCharge.amount) }}
             <span class="text-sm font-medium text-teal-50">تومان</span>
           </p>
-          <p v-if="currentCharge.dueAt" class="text-xs text-teal-100">
-            مهلت پرداخت: {{ formatDate(currentCharge.dueAt, 'short') }}
+          <p class="text-xs text-teal-100">
+            سررسید: {{ formatDate(nextDueCharge.dueAt, 'full') }}
+            <template v-if="dueCount > 1">
+              • {{ toPersianDigits(dueCount - 1) }} شارژ دیگر هم باقی است
+            </template>
           </p>
         </div>
-        <button
-          type="button"
-          class="w-full rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-teal-700 transition-colors hover:bg-teal-50 active:bg-teal-100"
-        >
-          پرداخت آنلاین شارژ
-        </button>
+        <UButton
+          color="neutral"
+          variant="solid"
+          size="md"
+          block
+          label="مشاهده شارژهای من"
+          icon="i-lucide-wallet"
+          class="bg-white text-teal-700 hover:bg-teal-50"
+          @click="router.push('/charges')"
+        />
+      </section>
+
+      <section v-else-if="user?.role !== 'manager'">
+        <AppCard>
+          <div class="flex items-center gap-3">
+            <span class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-300">
+              <Icon name="i-lucide-badge-check" class="size-5" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-bold text-slate-800 dark:text-slate-100">حساب شارژ شما تسویه است</p>
+              <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">بدهی فعالی ندارید؛ شارژهای قبلی از صفحه شارژها قابل مشاهده‌اند.</p>
+            </div>
+            <NuxtLink to="/charges" class="flex shrink-0 items-center gap-0.5 text-xs font-semibold text-teal-600 hover:text-teal-700 dark:text-teal-300">
+              شارژها
+              <Icon name="i-lucide-chevron-left" class="size-3.5" />
+            </NuxtLink>
+          </div>
+        </AppCard>
       </section>
     </template>
 

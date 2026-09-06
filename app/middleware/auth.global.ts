@@ -35,6 +35,19 @@ export default defineNuxtRouteMiddleware((to) => {
     if (isAnnouncementWrite && user.value.role !== 'manager') return navigateTo('/announcements')
   }
 
+  // شارژ، هزینه‌ها و شفافیت مالی: نیازمند ورود و عضویت در ساختمان
+  if (to.path === '/charges' || to.path.startsWith('/charges/')
+    || to.path === '/expenses' || to.path.startsWith('/expenses/')
+    || to.path === '/finances' || to.path.startsWith('/finances/')) {
+    if (!user.value) return navigateTo('/auth/login')
+    if (!store.buildingOfUser(user.value)) return navigateTo('/building')
+    // ایجاد شارژ و هزینه فقط برای مدیر
+    const isFinanceWrite = to.path === '/charges/new' || to.path === '/expenses/new'
+    if (isFinanceWrite && user.value.role !== 'manager') {
+      return navigateTo(to.path.startsWith('/charges') ? '/charges' : '/expenses')
+    }
+  }
+
   // صفحات داخلی ساختمان
   if (to.path.startsWith('/building/') && to.path !== '/building') {
     if (!user.value) return navigateTo('/auth/login')

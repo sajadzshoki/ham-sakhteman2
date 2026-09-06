@@ -1,5 +1,16 @@
 import type { Ref } from 'vue'
-import type { Announcement, AuthUser, Building, BuildingMember, BuildingUnit, Invitation, ProblemReport } from '~/types'
+import type {
+  Announcement,
+  AuthUser,
+  Building,
+  BuildingCharge,
+  BuildingMember,
+  BuildingUnit,
+  ChargePayment,
+  Expense,
+  Invitation,
+  ProblemReport,
+} from '~/types'
 
 const COOKIE_OPTIONS = {
   maxAge: 60 * 60 * 24 * 30,
@@ -68,6 +79,9 @@ export interface StoreRefs {
   invitations: Ref<Invitation[]>
   announcements: Ref<Announcement[]>
   problems: Ref<ProblemReport[]>
+  charges: Ref<BuildingCharge[]>
+  payments: Ref<ChargePayment[]>
+  expenses: Ref<Expense[]>
   seeded: Ref<boolean>
 }
 
@@ -90,6 +104,9 @@ export function useStoreRefs(): StoreRefs {
       invitations: useCookie<Invitation[]>('ham-invitations', { ...COOKIE_OPTIONS, default: () => [] }),
       announcements: useBase64JsonCookie<Announcement[]>('ham-announcements', []),
       problems: useBase64JsonCookie<ProblemReport[]>('ham-problems', []),
+      charges: useBase64JsonCookie<BuildingCharge[]>('ham-charges', []),
+      payments: useBase64JsonCookie<ChargePayment[]>('ham-payments', []),
+      expenses: useBase64JsonCookie<Expense[]>('ham-expenses', []),
       seeded: useCookie<boolean>('ham-seeded', { ...COOKIE_OPTIONS, default: () => false }),
     }
   }

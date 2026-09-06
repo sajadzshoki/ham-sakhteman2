@@ -30,7 +30,8 @@
   "status": {
     "paid": "Paid",
     "pending": "Pending payment",
-    "overdue": "Overdue",
+    "unpaid": "Unpaid",
+    "overdue": "Late",
     "inProgress": "In progress",
     "done": "Done",
     "canceled": "Canceled",

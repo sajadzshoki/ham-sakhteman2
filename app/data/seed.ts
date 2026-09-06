@@ -1,4 +1,14 @@
-import type { Announcement, Building, BuildingMember, BuildingUnit, Invitation, ProblemReport } from '~/types'
+import type {
+  Announcement,
+  Building,
+  BuildingCharge,
+  BuildingMember,
+  BuildingUnit,
+  ChargePayment,
+  Expense,
+  Invitation,
+  ProblemReport,
+} from '~/types'
 
 /**
  * دیتای دمو: با اولین بازدید بذرپاشی می‌شود تا حساب‌های «مدیر دمو» و «ساکن دمو»
@@ -126,20 +136,15 @@ export const seedInvitations: Invitation[] = [
 ]
 
 // ——— اطلاعیه‌ها و گزارش‌های دمو ———
-
-/** بنر سبک‌وزن SVG برای اطلاعیه نمونه (بدون فایل خارجی؛ عمداً بسیار کوچک تا کوکی از حد مجاز عبور نکند) */
-const seedBannerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="320"><rect width="640" height="320" fill="#0d9488"/><g fill="#ccfbf1" opacity=".95"><rect x="270" y="100" width="100" height="140" rx="8"/><rect x="292" y="122" width="16" height="16" fill="#0d9488"/><rect x="332" y="122" width="16" height="16" fill="#0d9488"/><rect x="292" y="156" width="16" height="16" fill="#0d9488"/><rect x="332" y="156" width="16" height="16" fill="#0d9488"/><rect x="306" y="198" width="28" height="42" fill="#0d9488"/><rect x="296" y="70" width="48" height="34" rx="4"/></g></svg>`
-
-export const seedAnnouncementBanner = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(seedBannerSvg)}`
+// نکته: متن‌های دمو عمداً کوتاه نگه داشته شده‌اند تا مجموع کوکی‌ها از سقف هدر سرور عبور نکند.
 
 export const seedAnnouncements: Announcement[] = [
   {
     id: 'ann-s1',
     buildingId: DEMO_BUILDING_ID,
     title: 'سرویس دوره‌ای آسانسور',
-    body: 'آسانسور ساختمان روز شنبه از ساعت ۹ تا ۱۲ برای سرویس دوره‌ای خاموش خواهد بود. لطفاً در این بازه از پله‌ها استفاده کنید و در صورت نیاز به جابه‌جایی وسایل سنگین، با سرایداری هماهنگ کنید.',
+    body: 'آسانسور روز شنبه از ساعت ۹ تا ۱۲ برای سرویس دوره‌ای خاموش است. لطفاً از پله‌ها استفاده کنید.',
     importance: 'important',
-    image: seedAnnouncementBanner,
     createdBy: DEMO_MANAGER_ID,
     createdByName: 'رضا احمدی',
     createdAt: daysAgo(1, 10, 30).toISOString(),
@@ -212,5 +217,182 @@ export const seedProblems: ProblemReport[] = [
     reportedBy: DEMO_MANAGER_ID,
     reportedByName: 'رضا احمدی',
     createdAt: daysAgo(4, 8, 20).toISOString(),
+  },
+]
+
+// ——— شارژها، پرداخت‌ها و هزینه‌های دمو ———
+
+export const seedCharges: BuildingCharge[] = [
+  {
+    id: 'ch-s1',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'شارژ ماهانه',
+    period: 'شهریور ۱۴۰۵',
+    amount: 850_000,
+    dueAt: daysAhead(6).toISOString(),
+    notes: 'شامل هزینه نظافت، برق مشاعات و نگهداری آسانسور.',
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(4, 9).toISOString(),
+  },
+  {
+    id: 'ch-s2',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'شارژ ماهانه',
+    period: 'مرداد ۱۴۰۵',
+    amount: 850_000,
+    dueAt: daysAgo(25).toISOString(),
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(35, 9).toISOString(),
+  },
+  {
+    id: 'ch-s3',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'سهم تعمیر ایزوگام پشت‌بام',
+    period: 'تابستان ۱۴۰۵',
+    amount: 1_200_000,
+    dueAt: daysAgo(70).toISOString(),
+    notes: 'هزینه کل تعمیر ۸٬۴۰۰٬۰۰۰ تومان بین ۷ واحد تقسیم شد.',
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(80, 10).toISOString(),
+  },
+]
+
+export const seedPayments: ChargePayment[] = [
+  // شارژ مرداد — پرداخت‌شده توسط ۳ عضو، بقیه دیرکرد
+  {
+    id: 'pay-s1',
+    chargeId: 'ch-s2',
+    memberId: 'm-5',
+    memberName: 'سارا محمدی',
+    amount: 850_000,
+    paidAt: daysAgo(28, 18, 30).toISOString(),
+    note: 'کارت به کارت',
+    method: 'manual',
+    recordedBy: DEMO_MANAGER_ID,
+  },
+  {
+    id: 'pay-s2',
+    chargeId: 'ch-s2',
+    memberId: 'm-1',
+    memberName: 'رضا احمدی',
+    amount: 850_000,
+    paidAt: daysAgo(27, 11).toISOString(),
+    method: 'manual',
+    recordedBy: DEMO_MANAGER_ID,
+  },
+  {
+    id: 'pay-s3',
+    chargeId: 'ch-s2',
+    memberId: 'm-3',
+    memberName: 'مریم کریمی',
+    amount: 850_000,
+    paidAt: daysAgo(20, 16, 45).toISOString(),
+    note: 'پرداخت نقدی',
+    method: 'manual',
+    recordedBy: DEMO_MANAGER_ID,
+  },
+  // سهم ایزوگام — ۵ عضو پرداخت کرده‌اند
+  {
+    id: 'pay-s4',
+    chargeId: 'ch-s3',
+    memberId: 'm-1',
+    memberName: 'رضا احمدی',
+    amount: 1_200_000,
+    paidAt: daysAgo(75, 10).toISOString(),
+    method: 'manual',
+    recordedBy: DEMO_MANAGER_ID,
+  },
+  {
+    id: 'pay-s5',
+    chargeId: 'ch-s3',
+    memberId: 'm-3',
+    memberName: 'مریم کریمی',
+    amount: 1_200_000,
+    paidAt: daysAgo(74, 12).toISOString(),
+    method: 'manual',
+    recordedBy: DEMO_MANAGER_ID,
+  },
+  {
+    id: 'pay-s6',
+    chargeId: 'ch-s3',
+    memberId: 'm-5',
+    memberName: 'سارا محمدی',
+    amount: 1_200_000,
+    paidAt: daysAgo(73, 9, 30).toISOString(),
+    method: 'manual',
+    recordedBy: DEMO_MANAGER_ID,
+  },
+  {
+    id: 'pay-s7',
+    chargeId: 'ch-s3',
+    memberId: 'm-6',
+    memberName: 'نادر شریفی',
+    amount: 1_200_000,
+    paidAt: daysAgo(72, 14).toISOString(),
+    method: 'manual',
+    recordedBy: DEMO_MANAGER_ID,
+  },
+  {
+    id: 'pay-s8',
+    chargeId: 'ch-s3',
+    memberId: 'm-7',
+    memberName: 'زهرا حسینی',
+    amount: 1_200_000,
+    paidAt: daysAgo(71, 17, 15).toISOString(),
+    method: 'manual',
+    recordedBy: DEMO_MANAGER_ID,
+  },
+]
+
+export const seedExpenses: Expense[] = [
+  {
+    id: 'ex-s1',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'قبض آب مشاعات',
+    amount: 480_000,
+    category: 'water',
+    date: daysAgo(3, 9).toISOString(),
+    notes: 'دوره سه‌ماهه بهار',
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(3, 10).toISOString(),
+  },
+  {
+    id: 'ex-s2',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'نظافت ماهانه مشاعات',
+    amount: 1_200_000,
+    category: 'cleaning',
+    date: daysAgo(5, 9).toISOString(),
+    notes: 'قرارداد ماهانه با شرکت نظافتی',
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(5, 11).toISOString(),
+  },
+  {
+    id: 'ex-s3',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'سرویس دوره‌ای آسانسور',
+    amount: 2_500_000,
+    category: 'elevator',
+    date: daysAgo(15, 9).toISOString(),
+    notes: 'قرارداد نگهداری ماهانه با شرکت تعمیرکار',
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(15, 12).toISOString(),
+  },
+  {
+    id: 'ex-s4',
+    buildingId: DEMO_BUILDING_ID,
+    title: 'خرید لامپ و سنسور راهرو',
+    amount: 320_000,
+    category: 'electricity',
+    date: daysAgo(8, 16).toISOString(),
+    createdBy: DEMO_MANAGER_ID,
+    createdByName: 'رضا احمدی',
+    createdAt: daysAgo(8, 17).toISOString(),
   },
 ]

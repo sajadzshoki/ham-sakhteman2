@@ -65,3 +65,40 @@ export function formatPhone(phone: string): string {
   const parts = [digits.slice(0, 4), digits.slice(4, 7), digits.slice(7)]
   return toPersianDigits(parts.filter(Boolean).join(' '))
 }
+
+/** تبدیل ارقام فارسی/عربی به لاتین برای پردازش ورودی عددی */
+function toLatinDigits(value: string): string {
+  return value
+    .replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+    .replace(/[٠-٩]/g, digit => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
+}
+
+/**
+ * تبدیل ورودی متنی مبلغ به عدد؛ جداکننده‌ها، فاصله و ارقام فارسی را تحمل می‌کند.
+ * برای ورودی نامعتبر یا غیرمثبت `null` برمی‌گرداند.
+ */
+export function parseAmount(value: string): number | null {
+  const normalized = toLatinDigits(value).replace(/[^\d]/g, '')
+  if (!normalized) return null
+  const amount = Number(normalized)
+  if (!Number.isFinite(amount) || amount <= 0) return null
+  return amount
+}
+
+/** تبدیل مقدار `2026-09-30` اینپوت تاریخ به رشته ISO با زمان محلی */
+export function isoFromDateString(value: string): string | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim())
+  if (!match) return null
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toISOString()
+}
+
+/** مقدار مناسب اینپوت تاریخ (`2026-09-30`) از روی رشته ISO با زمان محلی */
+export function dateInputValue(date: Date | string): string {
+  const value = typeof date === 'string' ? new Date(date) : date
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, '0')
+  const day = String(value.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}

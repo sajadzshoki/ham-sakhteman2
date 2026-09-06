@@ -1,15 +1,69 @@
-// ——— شارژ ———
+// ——— شارژ ساختمان ———
 
-/** وضعیت پرداخت شارژ */
-export type ChargeStatus = 'paid' | 'pending' | 'overdue'
+/** وضعیت پرداخت شارژ برای هر عضو — از روی رکورد پرداخت و سررسید استخراج می‌شود */
+export type ChargeStatus = 'unpaid' | 'paid' | 'overdue'
 
-export interface Charge {
+/** دوره شارژ ساختمان؛ هر عضو یک سهم با مبلغ یکسان دارد */
+export interface BuildingCharge {
   id: string
+  buildingId: string
   title: string
+  /** مثال: شهریور ۱۴۰۵ */
   period: string
+  /** مبلغ سهم هر واحد به تومان */
   amount: number
-  status: ChargeStatus
-  dueAt?: Date
+  dueAt: string
+  notes?: string
+  createdBy: string
+  createdByName: string
+  createdAt: string
+}
+
+/**
+ * رکورد پرداخت شارژ — در حال حاضر ثبت دستی توسط مدیر.
+ * فیلد `method` برای افزودن پرداخت آنلاین در آینده باز نگه داشته شده است.
+ */
+export interface ChargePayment {
+  id: string
+  chargeId: string
+  memberId: string
+  memberName: string
+  /** مبلغ پرداخت‌شده به تومان */
+  amount: number
+  paidAt: string
+  note?: string
+  /** روش پرداخت؛ فعلاً فقط دستی، بعداً `online` اضافه می‌شود */
+  method: 'manual'
+  recordedBy: string
+}
+
+// ——— هزینه‌های ساختمان ———
+
+/** دسته‌بندی هزینه ساختمان */
+export type ExpenseCategory =
+  | 'water'
+  | 'gas'
+  | 'electricity'
+  | 'elevator'
+  | 'cleaning'
+  | 'repair'
+  | 'other'
+
+export interface Expense {
+  id: string
+  buildingId: string
+  title: string
+  /** مبلغ به تومان */
+  amount: number
+  category: ExpenseCategory
+  /** تاریخ وقوع هزینه */
+  date: string
+  notes?: string
+  /** کلید مرجع تصویر رسید (با پیشوند `img:`) مانند اطلاعیه‌ها */
+  receipt?: string
+  createdBy: string
+  createdByName: string
+  createdAt: string
 }
 
 // ——— اطلاعیه‌ها ———

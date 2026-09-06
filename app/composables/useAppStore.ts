@@ -3,8 +3,13 @@ import type {
   AnnouncementImportance,
   AuthUser,
   Building,
+  BuildingCharge,
   BuildingMember,
   BuildingUnit,
+  ChargePayment,
+  ChargeStatus,
+  Expense,
+  ExpenseCategory,
   Invitation,
   MemberRole,
   ProblemCategory,
@@ -17,14 +22,17 @@ import {
   DEMO_RESIDENT_ID,
   seedAnnouncements,
   seedBuildings,
+  seedCharges,
+  seedExpenses,
   seedInvitations,
   seedMembers,
+  seedPayments,
   seedProblems,
   seedUnits,
 } from '~/data/seed'
 
 /**
- * استور دامنه (ساختمان/واحدها/اعضا/دعوت‌نامه‌ها) با ذخیره‌سازی در کوکی.
+ * استور دامنه (ساختمان/واحدها/اعضا/دعوت‌نامه‌ها/شارژ/هزینه‌ها) با ذخیره‌سازی در کوکی.
  * کوکی‌ها در SSR هم قابل خواندن‌اند تا رندر سرور و کلاینت هم‌خوان بمانند.
  * در فاز بک‌اند واقعی، این لایه با فراخوانی API جایگزین می‌شود.
  */
@@ -36,6 +44,9 @@ export function useAppStore() {
   const invitations = refs.invitations
   const announcements = refs.announcements
   const problems = refs.problems
+  const charges = refs.charges
+  const payments = refs.payments
+  const expenses = refs.expenses
   const seeded = refs.seeded
 
   // ——— بذرپاشی دیتای دمو ———
@@ -70,6 +81,9 @@ export function useAppStore() {
     invitations.value = [...seedInvitations]
     announcements.value = [...seedAnnouncements]
     problems.value = [...seedProblems]
+    charges.value = [...seedCharges]
+    payments.value = [...seedPayments]
+    expenses.value = [...seedExpenses]
     seeded.value = true
   }
 
@@ -383,6 +397,173 @@ export function useAppStore() {
     problems.value = problems.value.filter(item => item.id !== id)
   }
 
+  // ——— شارژ ———
+
+  const buildingCharges = (buildingId: string) =>
+    sortByNewest(charges.value.filter(item => item.buildingId === buildingId))
+
+  const getCharge = (id: string) =>
+    charges.value.find(item => item.id === id) ?? null
+
+  function createCharge(
+    buildingId: string,
+    input: { title: string; period: string; amount: number; dueAt: string; notes?: string },
+    creator: { id: string; name: string },
+  ): BuildingCharge {
+    const charge: BuildingCharge = {
+      id: createId('ch'),
+      buildingId,
+      title: input.title.trim(),
+      period: input.period.trim(),
+      amount: input.amount,
+      dueAt: input.dueAt,
+      notes: input.notes?.trim() || undefined,
+      createdBy: creator.id,
+      createdByName: creator.name,
+      createdAt: new Date().toISOString(),
+    }
+    charges.value = [charge, ...charges.value]
+    return charge
+  }
+
+  function removeCharge(id: string) {
+    charges.value = charges.value.filter(item => item.id !== id)
+    // پرداخت‌های مرتبط با شارژ حذف‌شده نیز پاک می‌شوند
+    payments.value = payments.value.filter(payment => payment.chargeId !== id)
+  }
+
+  /** آیا سررسید شارژ گذشته است؟ (مقایسه با ابتدای روز جاری) */
+  function isChargePastDue(charge: BuildingCharge): boolean {
+    const due = new Date(charge.dueAt)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return due.getTime() < today.getTime()
+  }
+
+  const chargePayments = (chargeId: string) =>
+    payments.value.filter(payment => payment.chargeId === chargeId)
+
+  const paymentFor = (chargeId: string, memberId: string) =>
+    payments.value.find(payment => payment.chargeId === chargeId && payment.memberId === memberId) ?? null
+
+  /** وضعیت پرداخت یک عضو برای یک شارژ: پرداخت‌شده، پرداخت‌نشده یا دیرکرد */
+  function chargeStatusFor(charge: BuildingCharge, memberId: string): ChargeStatus {
+    if (paymentFor(charge.id, memberId)) return 'paid'
+    return isChargePastDue(charge) ? 'overdue' : 'unpaid'
+  }
+
+  const chargePaidCount = (chargeId: string) => chargePayments(chargeId).length
+
+  /** تعداد اعضای مشمول پرداخت در ساختمان (هر عضو یک سهم دارد) */
+  const chargePayerCount = (buildingId: string) => buildingMembers(buildingId).length
+
+  function recordPayment(
+    charge: BuildingCharge,
+    member: BuildingMember,
+    input: { amount: number; paidAt: string; note?: string },
+    recorder: { id: string },
+  ): ChargePayment | null {
+    // هر عضو برای هر شارژ فقط یک رکورد پرداخت دارد
+    if (paymentFor(charge.id, member.id)) return null
+    const payment: ChargePayment = {
+      id: createId('pay'),
+      chargeId: charge.id,
+      memberId: member.id,
+      memberName: member.name,
+      amount: input.amount,
+      paidAt: input.paidAt,
+      note: input.note?.trim() || undefined,
+      method: 'manual',
+      recordedBy: recorder.id,
+    }
+    payments.value = [payment, ...payments.value]
+    return payment
+  }
+
+  function removePayment(id: string) {
+    payments.value = payments.value.filter(payment => payment.id !== id)
+  }
+
+  /** شارژهای پرداخت‌نشده/دیرکردِ یک عضو برای داشبورد — نزدیک‌ترین سررسید اول */
+  function dueChargesForMember(buildingId: string, memberId: string): BuildingCharge[] {
+    return buildingCharges(buildingId)
+      .filter(charge => chargeStatusFor(charge, memberId) !== 'paid')
+      .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())
+  }
+
+  // ——— هزینه‌ها ———
+
+  const buildingExpenses = (buildingId: string) =>
+    expenses.value
+      .filter(item => item.buildingId === buildingId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+  const getExpense = (id: string) =>
+    expenses.value.find(item => item.id === id) ?? null
+
+  function createExpense(
+    buildingId: string,
+    input: {
+      title: string
+      amount: number
+      category: ExpenseCategory
+      date: string
+      notes?: string
+      receipt?: string
+    },
+    creator: { id: string; name: string },
+  ): Expense {
+    const expense: Expense = {
+      id: createId('ex'),
+      buildingId,
+      title: input.title.trim(),
+      amount: input.amount,
+      category: input.category,
+      date: input.date,
+      notes: input.notes?.trim() || undefined,
+      receipt: input.receipt || undefined,
+      createdBy: creator.id,
+      createdByName: creator.name,
+      createdAt: new Date().toISOString(),
+    }
+    expenses.value = [expense, ...expenses.value]
+    return expense
+  }
+
+  function removeExpense(id: string) {
+    expenses.value = expenses.value.filter(item => item.id !== id)
+  }
+
+  // ——— نمای مالی ———
+
+  /**
+   * خلاصه مالی ساختمان برای «شفافیت مالی»: درآمد شارژ، مجموع هزینه‌ها، مانده،
+   * تعداد سهم‌های پرداخت‌شده/پرداخت‌نشده و هزینه‌های اخیر.
+   */
+  function financialSummary(buildingId: string) {
+    const buildingPayments = payments.value.filter(payment => {
+      const charge = getCharge(payment.chargeId)
+      return charge?.buildingId === buildingId
+    })
+    const buildingChargesList = buildingCharges(buildingId)
+    const payerCount = chargePayerCount(buildingId)
+
+    const income = buildingPayments.reduce((sum, payment) => sum + payment.amount, 0)
+    const expensesTotal = buildingExpenses(buildingId).reduce((sum, item) => sum + item.amount, 0)
+    const expectedItems = buildingChargesList.length * payerCount
+    const paidItems = buildingPayments.length
+
+    return {
+      income,
+      expensesTotal,
+      balance: income - expensesTotal,
+      paidItems,
+      unpaidItems: Math.max(0, expectedItems - paidItems),
+      expectedItems,
+      recentExpenses: buildingExpenses(buildingId).slice(0, 3),
+    }
+  }
+
   return {
     buildings,
     units,
@@ -390,6 +571,9 @@ export function useAppStore() {
     invitations,
     announcements,
     problems,
+    charges,
+    payments,
+    expenses,
     ensureSeeded,
     membershipOfUser,
     buildingOfUser,
@@ -426,5 +610,23 @@ export function useAppStore() {
     createProblemReport,
     updateProblemStatus,
     removeProblem,
+    buildingCharges,
+    getCharge,
+    createCharge,
+    removeCharge,
+    isChargePastDue,
+    chargePayments,
+    paymentFor,
+    chargeStatusFor,
+    chargePaidCount,
+    chargePayerCount,
+    recordPayment,
+    removePayment,
+    dueChargesForMember,
+    buildingExpenses,
+    getExpense,
+    createExpense,
+    removeExpense,
+    financialSummary,
   }
 }
