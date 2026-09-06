@@ -159,8 +159,11 @@ export interface ServiceProvider {
 
 // ——— احراز هویت ———
 
-/** نقش کاربر در اپ */
-export type MemberRole = 'manager' | 'resident'
+/** نقش کاربر در اپ؛ سوپرادمین سطح پلتفرم است و عضو ساختمان نیست */
+export type MemberRole = 'manager' | 'resident' | 'superadmin'
+
+/** نقش درون ساختمان (سوپرادمین شامل نمی‌شود) */
+export type BuildingRole = 'manager' | 'resident'
 
 /** روش‌های ورود؛ در حال حاضر رمز عبور فعال است و زیرساخت برای کد یک‌بارمصرف آماده نگه داشته شده */
 export type AuthMethod = 'password' | 'otp'
@@ -205,11 +208,36 @@ export interface BuildingMember {
   userId?: string
   name: string
   phone?: string
-  role: MemberRole
+  role: BuildingRole
   unitId?: string
   /** مالک یا مستأجر بودن نسبت به واحد تخصیص‌یافته */
   unitStatus?: UnitStatus
   joinedAt: string
+}
+
+// ——— اعلان‌ها ———
+
+/** نوع رویدادی که اعلان به آن اشاره می‌کند */
+export type NotificationType =
+  | 'announcement'
+  | 'announcement-important'
+  | 'problem-new'
+  | 'problem-status'
+  | 'charge-new'
+  | 'payment-recorded'
+
+/** اعلان درون‌اپی برای یک کاربر؛ با لینک به صفحه مرتبط و وضعیت خوانده‌شده */
+export interface AppNotification {
+  id: string
+  /** کاربر مقصد */
+  userId: string
+  type: NotificationType
+  title: string
+  body?: string
+  /** مسیر صفحه مرتبط */
+  link?: string
+  createdAt: string
+  readAt?: string
 }
 
 // ——— دعوت‌نامه ———
@@ -222,7 +250,7 @@ export interface Invitation {
   /** کد کوتاه قابل اشتراک‌گذاری */
   code: string
   /** نقشی که پس از پیوستن به عضو داده می‌شود */
-  role: MemberRole
+  role: BuildingRole
   createdBy: string
   createdAt: string
   expiresAt: string

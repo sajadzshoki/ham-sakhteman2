@@ -37,7 +37,7 @@ function statusLabel(status: ProblemStatus): string {
 
 function changeStatus(status: ProblemStatus) {
   if (!problem.value || problem.value.status === status) return
-  store.updateProblemStatus(problem.value.id, status)
+  store.updateProblemStatus(problem.value.id, status, user.value?.id)
   toast.add({ title: `وضعیت گزارش به «${statusLabel(status)}» تغییر کرد`, color: 'success' })
 }
 </script>

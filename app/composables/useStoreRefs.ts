@@ -1,6 +1,8 @@
 import type { Ref } from 'vue'
+import { seedNotifications } from '~/data/seed'
 import type {
   Announcement,
+  AppNotification,
   AuthUser,
   Building,
   BuildingCharge,
@@ -69,6 +71,27 @@ function useBase64JsonCookie<T>(name: string, defaultValue: T): Ref<T> {
   })
 }
 
+/**
+ * ذخیره‌سازی فقط-کلاینت (localStorage) برای داده‌هایUX که به هم‌خوانی SSR
+ * نیاز ندارند — مانند اعلان‌ها. سرور همیشه مقدار پیش‌فرض/اسکلت را رندر می‌کند
+ * و کلاینت پس از mount مقدار واقعی را جایگزین می‌کند (الگوی AppImage).
+ * این داده‌ها عمداً خارج از کوکی نگه داشته می‌شوند تا بودجه حجم هدر حفظ شود.
+ */
+function useClientJsonStore<T>(key: string, defaultValue: T, seed?: T): Ref<T> {
+  const state = ref(defaultValue) as Ref<T>
+  if (import.meta.client) {
+    try {
+      const raw = localStorage.getItem(key)
+      state.value = raw ? (JSON.parse(raw) as T) : (seed ?? defaultValue)
+    }
+    catch {
+      state.value = seed ?? defaultValue
+    }
+    watch(state, value => localStorage.setItem(key, JSON.stringify(value)), { deep: true })
+  }
+  return state
+}
+
 export interface StoreRefs {
   user: Ref<AuthUser | null>
   users: Ref<AuthUser[]>
@@ -83,6 +106,7 @@ export interface StoreRefs {
   payments: Ref<ChargePayment[]>
   expenses: Ref<Expense[]>
   trustedProviders: Ref<Record<string, string[]>>
+  notifications: Ref<AppNotification[]>
   seeded: Ref<boolean>
 }
 
@@ -109,6 +133,7 @@ export function useStoreRefs(): StoreRefs {
       payments: useBase64JsonCookie<ChargePayment[]>('ham-payments', []),
       expenses: useBase64JsonCookie<Expense[]>('ham-expenses', []),
       trustedProviders: useBase64JsonCookie<Record<string, string[]>>('ham-trusted-providers', {}),
+      notifications: useClientJsonStore<AppNotification[]>('ham-notifications', [], seedNotifications),
       seeded: useCookie<boolean>('ham-seeded', { ...COOKIE_OPTIONS, default: () => false }),
     }
   }

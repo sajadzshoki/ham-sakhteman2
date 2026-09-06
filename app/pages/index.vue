@@ -48,12 +48,25 @@ const managerSummary = computed(() => {
 })
 
 /** دسترسی سریع بر اساس نقش — مدیر ابزار مدیریت دارد و ساکن ابزار گزارش و مشاهده */
+/** آمار سریع مدیر برای نمای کلی ساختمان */
+const managerStats = computed(() => {
+  if (!building.value || user.value?.role !== 'manager') return []
+  return [
+    { label: 'ساکن', value: store.residentCount(building.value.id), icon: 'i-lucide-users' },
+    { label: 'واحد', value: store.buildingUnits(building.value.id).length, icon: 'i-lucide-door-open' },
+    { label: 'گزارش باز', value: openProblemsCount.value, icon: 'i-lucide-circle-alert' },
+  ]
+})
+
 const quickActions = computed(() => {
   if (user.value?.role === 'manager') {
     return [
       { label: 'ایجاد اطلاعیه', icon: 'i-lucide-megaphone', tint: 'bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300', to: '/announcements/new' },
+      { label: 'ایجاد شارژ', icon: 'i-lucide-wallet', tint: 'bg-teal-50 text-teal-600 dark:bg-teal-400/10 dark:text-teal-300', to: '/charges/new' },
+      { label: 'ثبت هزینه', icon: 'i-lucide-receipt', tint: 'bg-rose-50 text-rose-600 dark:bg-rose-400/10 dark:text-rose-300', to: '/expenses/new' },
+      { label: 'دعوت ساکن', icon: 'i-lucide-user-plus', tint: 'bg-violet-50 text-violet-600 dark:bg-violet-400/10 dark:text-violet-300', to: '/building/invite' },
       { label: 'مشاهده مشکلات', icon: 'i-lucide-circle-alert', tint: 'bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-300', to: '/problems' },
-      { label: 'مدیریت ساختمان', icon: 'i-lucide-building-2', tint: 'bg-violet-50 text-violet-600 dark:bg-violet-400/10 dark:text-violet-300', to: '/building' },
+      { label: 'مدیریت ساختمان', icon: 'i-lucide-building-2', tint: 'bg-slate-100 text-slate-600 dark:bg-slate-400/10 dark:text-slate-300', to: '/building' },
     ]
   }
   return [
@@ -167,6 +180,23 @@ const features = [
               {{ action.label }}
             </span>
           </NuxtLink>
+        </div>
+      </section>
+
+      <!-- آمار سریع مدیر -->
+      <section v-if="user?.role === 'manager' && managerStats.length">
+        <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
+          <AppCard v-for="stat in managerStats" :key="stat.label" padding="sm">
+            <div class="flex items-center gap-2.5">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <Icon :name="stat.icon" class="size-4.5" />
+              </span>
+              <div class="min-w-0">
+                <p class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">{{ toPersianDigits(stat.value) }}</p>
+                <p class="truncate text-[11px] text-slate-500 dark:text-slate-400">{{ stat.label }}</p>
+              </div>
+            </div>
+          </AppCard>
         </div>
       </section>
 

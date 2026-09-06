@@ -40,6 +40,7 @@ const statusPresets: Record<string, { color: BadgeColor; labelKey: string }> = {
   resolved: { color: 'success', labelKey: 'status.resolved' },
   // نقش اعضا
   manager: { color: 'primary', labelKey: 'status.manager' },
+  superadmin: { color: 'warning', labelKey: 'status.superAdmin' },
   resident: { color: 'info', labelKey: 'status.resident' },
   // دعوت‌نامه‌ها
   active: { color: 'success', labelKey: 'status.active' },

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MemberRole } from '~/types'
+import type { BuildingRole } from '~/types'
 
 definePageMeta({ layout: 'auth' })
 
@@ -9,7 +9,7 @@ const { register, redirectAfterAuth } = useAuth()
 
 useSeoMeta({ title: 'ثبت‌نام', ogTitle: 'ثبت‌نام' })
 
-const roleOptions: { id: MemberRole; title: string; description: string; icon: string }[] = [
+const roleOptions: { id: BuildingRole; title: string; description: string; icon: string }[] = [
   {
     id: 'manager',
     title: 'مدیر ساختمان',
@@ -27,7 +27,7 @@ const roleOptions: { id: MemberRole; title: string; description: string; icon: s
 const name = ref('')
 const phone = ref('')
 const password = ref('')
-const role = ref<MemberRole>('resident')
+const role = ref<BuildingRole>('resident')
 
 const nameError = ref('')
 const phoneError = ref('')

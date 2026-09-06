@@ -48,6 +48,17 @@ export default defineNuxtRouteMiddleware((to) => {
     }
   }
 
+  // مرکز اعلان‌ها: نیازمند ورود
+  if (to.path === '/notifications' || to.path.startsWith('/notifications/')) {
+    if (!user.value) return navigateTo('/auth/login')
+  }
+
+  // مدیریت کل پلتفرم: فقط سوپرادمین
+  if (to.path === '/admin' || to.path.startsWith('/admin/')) {
+    if (!user.value) return navigateTo('/auth/login')
+    if (user.value.role !== 'superadmin') return navigateTo('/')
+  }
+
   // خدمات ساختمان (دایره ارائه‌دهندگان): نیازمند ورود و عضویت در ساختمان
   if (to.path === '/services' || to.path.startsWith('/services/')) {
     if (!user.value) return navigateTo('/auth/login')

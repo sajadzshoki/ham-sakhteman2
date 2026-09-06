@@ -4,6 +4,13 @@ const route = useRoute()
 const nav = useAppNavigation()
 const { isDark, toggleTheme } = useTheme()
 const { user, isAuthenticated } = useAuth()
+const store = useAppStore()
+
+// اعلان‌ها در localStorage نگهداری می‌شوند؛ برای هم‌خوانی هیدریشن، نشان فقط پس از mount
+const clientReady = ref(false)
+onMounted(() => { clientReady.value = true })
+
+const unreadCount = computed(() => (clientReady.value && user.value ? store.unreadNotifications(user.value.id).length : 0))
 </script>
 
 <template>
@@ -51,17 +58,21 @@ const { user, isAuthenticated } = useAuth()
           :aria-label="isDark ? 'حالت روشن' : 'حالت تاریک'"
           @click="toggleTheme"
         />
-        <UButton
+        <NuxtLink
           v-if="isAuthenticated"
-          color="neutral"
-          variant="ghost"
-          size="md"
-          icon="i-lucide-bell"
+          to="/notifications"
           aria-label="اعلان‌ها"
-          class="relative"
+          class="relative flex size-10 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white"
+          :class="isRouteActive('/notifications', route.path) && 'bg-teal-50 text-teal-700 dark:bg-teal-400/10 dark:text-teal-300'"
         >
-          <span class="absolute -top-0.5 -end-0.5 size-2.5 rounded-full bg-teal-500 ring-2 ring-white dark:ring-slate-950" />
-        </UButton>
+          <Icon name="i-lucide-bell" class="size-5" />
+          <span
+            v-if="unreadCount > 0"
+            class="absolute top-1 end-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-teal-600 px-1 text-[9px] font-extrabold text-white ring-2 ring-white dark:bg-teal-500 dark:ring-slate-950"
+          >
+            {{ toPersianDigits(Math.min(unreadCount, 9)) }}
+          </span>
+        </NuxtLink>
         <NuxtLink
           v-if="isAuthenticated && user"
           to="/account"

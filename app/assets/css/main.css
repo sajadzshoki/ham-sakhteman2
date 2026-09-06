@@ -49,3 +49,12 @@
     display: none;
   }
 }
+
+/* ریزتعامل ظریف و یکدست: فشرده‌شدن نامحسوس هنگام فشردن دکمه‌ها و پیوندها */
+[data-slot='base'] {
+  transition: transform 120ms ease;
+}
+
+[data-slot='base']:active {
+  transform: scale(0.98);
+}

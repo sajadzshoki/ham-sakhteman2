@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MemberRole, UnitStatus } from '~/types'
+import type { BuildingRole, UnitStatus } from '~/types'
 
 const props = defineProps<{
   buildingId: string
@@ -12,7 +12,7 @@ const open = defineModel<boolean>('open', { default: false })
 
 const name = ref('')
 const phone = ref('')
-const role = ref<MemberRole>('resident')
+const role = ref<BuildingRole>('resident')
 const unitId = ref('')
 const unitStatus = ref<UnitStatus>('owner')
 

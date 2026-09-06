@@ -1,5 +1,6 @@
 import type {
   Announcement,
+  AppNotification,
   Building,
   BuildingCharge,
   BuildingMember,
@@ -17,11 +18,13 @@ import type {
 
 export const DEMO_MANAGER_ID = 'user-manager'
 export const DEMO_RESIDENT_ID = 'user-resident'
+export const DEMO_ADMIN_ID = 'user-admin'
 export const DEMO_BUILDING_ID = 'b-1'
 
 export const DEMO_ACCOUNTS = [
   { phone: '09121112233', password: '1234', label: 'مدیر دمو (رضا احمدی)' },
   { phone: '09123456789', password: '1234', label: 'ساکن دمو (سارا محمدی)' },
+  { phone: '09120000000', password: '1234', label: 'سوپرادمین دمو (نگار توکلی)' },
 ]
 
 export const seedUnits: BuildingUnit[] = [
@@ -220,6 +223,28 @@ export const seedProblems: ProblemReport[] = [
     reportedBy: DEMO_MANAGER_ID,
     reportedByName: 'رضا احمدی',
     createdAt: daysAgo(4, 8, 20).toISOString(),
+  },
+]
+
+// ——— اعلان‌های دمو ———
+// متن‌ها کوتاه نگه داشته می‌شوند تا کوکی اعلان‌ها در بودجه حجم هدر بماند.
+
+export const seedNotifications: AppNotification[] = [
+  {
+    id: 'ntf-s1',
+    userId: DEMO_RESIDENT_ID,
+    type: 'announcement-important',
+    title: 'اطلاعیه مهم: «سرویس دوره‌ای آسانسور»',
+    link: '/announcements/ann-s1',
+    createdAt: daysAgo(1, 10, 30).toISOString(),
+  },
+  {
+    id: 'ntf-s4',
+    userId: DEMO_MANAGER_ID,
+    type: 'problem-new',
+    title: 'گزارش مشکل جدید: «صدای غیرعادی کابین آسانسور»',
+    link: '/problems/pr-s2',
+    createdAt: daysAgo(1, 16, 45).toISOString(),
   },
 ]
 

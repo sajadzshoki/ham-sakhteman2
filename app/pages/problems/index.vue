@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProblemCategory, ProblemStatus } from '~/types'
+import type { ProblemStatus } from '~/types'
 import { problemCategories, problemCategoryOf, problemStatusFilters } from '~/data/mock'
 
 const router = useRouter()
@@ -13,8 +13,8 @@ useSeoMeta({
 
 const building = computed(() => store.buildingOfUser(user.value))
 
-const statusFilter = ref<'all' | ProblemStatus>('all')
-const categoryFilter = ref<'all' | ProblemCategory>('all')
+const statusFilter = ref<string>('all')
+const categoryFilter = ref<string>('all')
 
 /** مدیر همه گزارش‌ها را می‌بیند؛ ساکن فقط گزارش‌های خودش را */
 const baseProblems = computed(() => {
@@ -33,6 +33,12 @@ const filteredProblems = computed(() =>
 )
 
 const openCount = computed(() => baseProblems.value.filter(item => item.status !== 'resolved').length)
+
+const statusOptions = computed(() => problemStatusFilters.map(option => ({ id: option.id as string, label: option.label })))
+const categoryOptions = computed(() => [
+  { id: 'all', label: 'همه دسته‌ها' },
+  ...problemCategories.map(category => ({ id: category.id as string, label: category.label, icon: category.icon })),
+])
 
 function clearFilters() {
   statusFilter.value = 'all'
@@ -63,49 +69,10 @@ function goNew() {
 
     <template v-else-if="baseProblems.length">
       <!-- فیلتر وضعیت -->
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="option in problemStatusFilters"
-          :key="option.id"
-          type="button"
-          class="rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 transition-colors"
-          :class="statusFilter === option.id
-            ? 'bg-teal-600 text-white ring-teal-600 dark:bg-teal-500 dark:ring-teal-500'
-            : 'bg-white text-slate-600 ring-slate-200 hover:ring-teal-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-white/10 dark:hover:ring-teal-500/60'"
-          @click="statusFilter = option.id"
-        >
-          {{ option.label }}
-        </button>
-      </div>
+      <FilterChips v-model="statusFilter" :options="statusOptions" />
 
       <!-- فیلتر دسته‌بندی -->
-      <div class="-mx-4 overflow-x-auto px-4 pb-1">
-        <div class="flex w-max gap-2">
-          <button
-            type="button"
-            class="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 transition-colors"
-            :class="categoryFilter === 'all'
-              ? 'bg-teal-600 text-white ring-teal-600 dark:bg-teal-500 dark:ring-teal-500'
-              : 'bg-white text-slate-600 ring-slate-200 hover:ring-teal-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-white/10 dark:hover:ring-teal-500/60'"
-            @click="categoryFilter = 'all'"
-          >
-            همه دسته‌ها
-          </button>
-          <button
-            v-for="category in problemCategories"
-            :key="category.id"
-            type="button"
-            class="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 transition-colors"
-            :class="categoryFilter === category.id
-              ? 'bg-teal-600 text-white ring-teal-600 dark:bg-teal-500 dark:ring-teal-500'
-              : 'bg-white text-slate-600 ring-slate-200 hover:ring-teal-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-white/10 dark:hover:ring-teal-500/60'"
-            @click="categoryFilter = category.id"
-          >
-            <Icon :name="category.icon" class="size-3.5" />
-            {{ category.label }}
-          </button>
-        </div>
-      </div>
+      <FilterChips v-model="categoryFilter" :options="categoryOptions" />
 
       <!-- لیست گزارش‌ها -->
       <div v-if="filteredProblems.length" class="space-y-3">

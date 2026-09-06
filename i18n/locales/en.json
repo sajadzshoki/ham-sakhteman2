@@ -46,6 +46,7 @@
     "manager": "Building Manager",
     "active": "Active",
     "used": "Used",
-    "expired": "Expired"
+    "expired": "Expired",
+    "superAdmin": "Super Admin"
   }
 }

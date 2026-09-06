@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Invitation, MemberRole } from '~/types'
+import type { BuildingRole, Invitation } from '~/types'
 
 const toast = useToast()
 const { user } = useAuth()
@@ -15,7 +15,7 @@ const activeInvitation = computed(
 )
 
 // ——— ساخت کد جدید ———
-const newInviteRole = ref<MemberRole>('resident')
+const newInviteRole = ref<BuildingRole>('resident')
 
 function createInvitation() {
   if (!building.value || !user.value) return
@@ -42,7 +42,7 @@ function confirmRemove() {
   toast.add({ title: 'دعوت‌نامه حذف شد', color: 'success' })
 }
 
-const roleLabel = (role: MemberRole) => (role === 'manager' ? 'مدیر ساختمان' : 'ساکن')
+const roleLabel = (role: BuildingRole) => (role === 'manager' ? 'مدیر ساختمان' : 'ساکن')
 </script>
 
 <template>

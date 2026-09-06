@@ -137,7 +137,8 @@ function fillDemo(index: number) {
           v-for="(account, index) in DEMO_ACCOUNTS"
           :key="account.phone"
           type="button"
-          class="rounded-xl bg-slate-50 px-2 py-2.5 text-[11px] leading-4 font-bold text-slate-600 ring-1 ring-slate-950/5 transition-colors hover:bg-teal-50 hover:text-teal-700 dark:bg-slate-800/50 dark:text-slate-300 dark:ring-white/10 dark:hover:bg-teal-400/10 dark:hover:text-teal-300"
+          class="rounded-xl bg-slate-50 px-2 py-2.5 text-[11px] leading-4 font-bold text-slate-600 ring-1 ring-slate-950/5 transition-colors hover:bg-teal-50 hover:text-teal-700 active:scale-[0.98] dark:bg-slate-800/50 dark:text-slate-300 dark:ring-white/10 dark:hover:bg-teal-400/10 dark:hover:text-teal-300"
+          :class="index === DEMO_ACCOUNTS.length - 1 && DEMO_ACCOUNTS.length % 2 === 1 && 'col-span-2'"
           @click="fillDemo(index)"
         >
           {{ account.label }}

@@ -1,4 +1,4 @@
-import type { AuthMethod, AuthUser, MemberRole } from '~/types'
+import type { AuthMethod, AuthUser, BuildingRole } from '~/types'
 
 /**
  * احراز هویت نمایشی مبتنی بر کوکی (خوانا در SSR برای هم‌خوانی رندر).
@@ -14,6 +14,7 @@ export function useAuth() {
   const user = computed(() => session.value)
   const isAuthenticated = computed(() => session.value !== null)
   const isManager = computed(() => session.value?.role === 'manager')
+  const isSuperAdmin = computed(() => session.value?.role === 'superadmin')
 
   function login(phone: string, password: string): { ok: boolean; error?: 'invalid' } {
     const found = users.value.find(
@@ -28,7 +29,7 @@ export function useAuth() {
     name: string
     phone: string
     password: string
-    role: MemberRole
+    role: BuildingRole
   }): { ok: boolean; error?: 'duplicate' } {
     const phone = input.phone.trim()
     if (users.value.some(item => item.phone === phone)) {
@@ -58,6 +59,7 @@ export function useAuth() {
    * ۳) ساکن بدون ساختمان → صفحه پیوستن با کد دعوت
    */
   function redirectAfterAuth(): string {
+    if (session.value?.role === 'superadmin') return '/admin'
     if (pendingJoinCode.value) {
       const target = `/join?code=${encodeURIComponent(pendingJoinCode.value)}`
       pendingJoinCode.value = null
@@ -75,6 +77,7 @@ export function useAuth() {
     user,
     isAuthenticated,
     isManager,
+    isSuperAdmin,
     login,
     register,
     logout,

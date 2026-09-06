@@ -1,17 +1,19 @@
 import type {
   Announcement,
   AnnouncementImportance,
+  AppNotification,
   AuthUser,
   Building,
   BuildingCharge,
   BuildingMember,
   BuildingUnit,
+  BuildingRole,
   ChargePayment,
   ChargeStatus,
   Expense,
   ExpenseCategory,
   Invitation,
-  MemberRole,
+  NotificationType,
   ProblemCategory,
   ProblemReport,
   ProblemStatus,
@@ -20,6 +22,7 @@ import type {
 } from '~/types'
 import { serviceProviders } from '~/data/providers'
 import {
+  DEMO_ADMIN_ID,
   DEMO_BUILDING_ID,
   DEMO_MANAGER_ID,
   DEMO_RESIDENT_ID,
@@ -52,6 +55,7 @@ export function useAppStore() {
   const payments = refs.payments
   const expenses = refs.expenses
   const trustedProviders = refs.trustedProviders
+  const notifications = refs.notifications
   const seeded = refs.seeded
 
   // ——— بذرپاشی دیتای دمو ———
@@ -75,6 +79,14 @@ export function useAppStore() {
         role: 'resident',
         password: '1234',
         createdAt: daysAgo(200).toISOString(),
+      },
+      {
+        id: DEMO_ADMIN_ID,
+        name: 'نگار توکلی',
+        phone: '09120000000',
+        role: 'superadmin',
+        password: '1234',
+        createdAt: daysAgo(300).toISOString(),
       },
     ]
 
@@ -206,7 +218,7 @@ export function useAppStore() {
   function addMember(buildingId: string, input: {
     name: string
     phone?: string
-    role: MemberRole
+    role: BuildingRole
     unitId?: string
     unitStatus?: UnitStatus
   }): BuildingMember {
@@ -249,9 +261,20 @@ export function useAppStore() {
     })
   }
 
+  /** ویرایش پروفایل: نام کاربر در فهرست کاربران، نشست فعلی و عضویت‌ها به‌روز می‌شود */
+  function updateProfile(userId: string, name: string) {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    refs.users.value = refs.users.value.map(item => (item.id === userId ? { ...item, name: trimmed } : item))
+    if (refs.user.value?.id === userId) {
+      refs.user.value = { ...refs.user.value, name: trimmed }
+    }
+    members.value = members.value.map(member => (member.userId === userId ? { ...member, name: trimmed } : member))
+  }
+
   // ——— دعوت‌نامه‌ها ———
 
-  function createInvitation(buildingId: string, role: MemberRole, creatorId: string): Invitation {
+  function createInvitation(buildingId: string, role: BuildingRole, creatorId: string): Invitation {
     const invitation: Invitation = {
       id: createId('inv'),
       buildingId,
@@ -341,6 +364,13 @@ export function useAppStore() {
       createdAt: new Date().toISOString(),
     }
     announcements.value = [announcement, ...announcements.value]
+    pushNotifications(memberUserIds(buildingId, author.id), () => ({
+      type: announcement.importance === 'important' ? 'announcement-important' : 'announcement',
+      title: announcement.importance === 'important'
+        ? `اطلاعیه مهم: «${announcement.title}»`
+        : `اطلاعیه جدید: «${announcement.title}»`,
+      link: `/announcements/${announcement.id}`,
+    }))
     return announcement
   }
 
@@ -392,14 +422,33 @@ export function useAppStore() {
       createdAt: new Date().toISOString(),
     }
     problems.value = [report, ...problems.value]
+    const managerUserId = members.value.find(member => member.buildingId === buildingId && member.role === 'manager')?.userId
+    pushNotifications([managerUserId && managerUserId !== reporter.id ? managerUserId : undefined], () => ({
+      type: 'problem-new',
+      title: `گزارش مشکل جدید: «${report.title}»`,
+      link: `/problems/${report.id}`,
+    }))
     return report
   }
 
-  function updateProblemStatus(id: string, status: ProblemStatus) {
-    problems.value = problems.value.map((item) => {
-      if (item.id !== id) return item
-      return { ...item, status, updatedAt: new Date().toISOString() }
-    })
+  const problemStatusLabels: Record<ProblemStatus, string> = {
+    new: 'جدید',
+    'in-progress': 'در حال پیگیری',
+    resolved: 'حل شده',
+  }
+
+  function updateProblemStatus(id: string, status: ProblemStatus, actorId?: string) {
+    const problem = problems.value.find(item => item.id === id)
+    if (!problem || problem.status === status) return
+    problems.value = problems.value.map(item =>
+      item.id === id ? { ...item, status, updatedAt: new Date().toISOString() } : item,
+    )
+    pushNotifications([problem.reportedBy !== actorId ? problem.reportedBy : undefined], () => ({
+      type: 'problem-status',
+      title: `وضعیت گزارش «${problem.title}» تغییر کرد`,
+      body: `وضعیت جدید: ${problemStatusLabels[status]}`,
+      link: `/problems/${problem.id}`,
+    }))
   }
 
   function removeProblem(id: string) {
@@ -432,6 +481,12 @@ export function useAppStore() {
       createdAt: new Date().toISOString(),
     }
     charges.value = [charge, ...charges.value]
+    pushNotifications(memberUserIds(buildingId, creator.id), () => ({
+      type: 'charge-new',
+      title: `شارژ جدید: ${charge.title} • ${charge.period}`,
+      body: `مبلغ سهم هر واحد: ${formatPrice(charge.amount)}`,
+      link: `/charges/${charge.id}`,
+    }))
     return charge
   }
 
@@ -486,6 +541,12 @@ export function useAppStore() {
       recordedBy: recorder.id,
     }
     payments.value = [payment, ...payments.value]
+    pushNotifications([member.userId], () => ({
+      type: 'payment-recorded',
+      title: 'پرداخت شارژ شما ثبت شد',
+      body: `${charge.title} • ${charge.period}`,
+      link: `/charges/${charge.id}`,
+    }))
     return payment
   }
 
@@ -541,6 +602,54 @@ export function useAppStore() {
 
   function removeExpense(id: string) {
     expenses.value = expenses.value.filter(item => item.id !== id)
+  }
+
+  // ——— اعلان‌ها ———
+
+  /** سقف تعداد اعلان‌ها تا کوکی از بودجه حجم عبور نکند */
+  const NOTIFICATION_CAP = 8
+
+  /** ایجاد اعلان برای کاربران مقصد (بدون اعلان به خودِ انجام‌دهنده عمل) */
+  function pushNotifications(
+    userIds: (string | undefined)[],
+    build: () => { type: NotificationType, title: string, body?: string, link?: string },
+  ) {
+    const targets = [...new Set(userIds.filter((id): id is string => Boolean(id)))]
+    if (targets.length === 0) return
+    const created: AppNotification[] = targets.map(userId => ({
+      id: createId('ntf'),
+      userId,
+      ...build(),
+      createdAt: new Date().toISOString(),
+    }))
+    notifications.value = [...created, ...notifications.value].slice(0, NOTIFICATION_CAP)
+  }
+
+  /** شناسه کاربران دارای حساب در ساختمان (به‌جز انجام‌دهنده عمل) */
+  const memberUserIds = (buildingId: string, exceptUserId?: string) =>
+    members.value
+      .filter(member => member.buildingId === buildingId && member.userId && member.userId !== exceptUserId)
+      .map(member => member.userId)
+
+  const notificationsFor = (userId: string) =>
+    notifications.value
+      .filter(item => item.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+  const unreadNotifications = (userId: string) =>
+    notificationsFor(userId).filter(item => !item.readAt)
+
+  function markNotificationRead(id: string) {
+    notifications.value = notifications.value.map(item =>
+      item.id === id && !item.readAt ? { ...item, readAt: new Date().toISOString() } : item,
+    )
+  }
+
+  function markAllNotificationsRead(userId: string) {
+    const now = new Date().toISOString()
+    notifications.value = notifications.value.map(item =>
+      item.userId === userId && !item.readAt ? { ...item, readAt: now } : item,
+    )
   }
 
   // ——— خدمات ساختمان (دایره ارائه‌دهندگان) ———
@@ -680,5 +789,11 @@ export function useAppStore() {
     isProviderTrusted,
     toggleProviderTrusted,
     sortedProviders,
+    users: refs.users,
+    notificationsFor,
+    unreadNotifications,
+    markNotificationRead,
+    markAllNotificationsRead,
+    updateProfile,
   }
 }

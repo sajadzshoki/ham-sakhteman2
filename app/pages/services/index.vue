@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { ProviderCategory } from '~/types'
 import { providerCategories, providerCategoryOf } from '~/data/mock'
 
 const { user, isManager } = useAuth()
@@ -14,7 +13,7 @@ const building = computed(() => store.buildingOfUser(user.value))
 
 // ——— جستجو و فیلتر دسته‌بندی ———
 const query = ref('')
-const categoryFilter = ref<'all' | ProviderCategory>('all')
+const categoryFilter = ref<string>('all')
 
 /** متن جستجو را ساده نرمال می‌کند: فاصله‌های اضافی و ح ی/ک عربی */
 const normalize = (value: string) => value
@@ -42,6 +41,11 @@ const providers = computed(() => {
   })
 })
 
+const categoryOptions = computed(() => [
+  { id: 'all', label: 'همه' },
+  ...providerCategories.map(category => ({ id: category.id as string, label: category.label, icon: category.icon })),
+])
+
 const hasActiveFilter = computed(() => categoryFilter.value !== 'all' || query.value.trim() !== '')
 
 function clearFilters() {
@@ -68,33 +72,7 @@ function clearFilters() {
     />
 
     <!-- فیلتر دسته‌بندی -->
-    <div class="-mx-4 overflow-x-auto px-4 pb-1">
-      <div class="flex w-max gap-2">
-        <button
-          type="button"
-          class="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 transition-colors"
-          :class="categoryFilter === 'all'
-            ? 'bg-teal-600 text-white ring-teal-600 dark:bg-teal-500 dark:ring-teal-500'
-            : 'bg-white text-slate-600 ring-slate-200 hover:ring-teal-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-white/10 dark:hover:ring-teal-500/60'"
-          @click="categoryFilter = 'all'"
-        >
-          همه
-        </button>
-        <button
-          v-for="category in providerCategories"
-          :key="category.id"
-          type="button"
-          class="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 transition-colors"
-          :class="categoryFilter === category.id
-            ? 'bg-teal-600 text-white ring-teal-600 dark:bg-teal-500 dark:ring-teal-500'
-            : 'bg-white text-slate-600 ring-slate-200 hover:ring-teal-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-white/10 dark:hover:ring-teal-500/60'"
-          @click="categoryFilter = category.id"
-        >
-          <Icon :name="category.icon" class="size-3.5" />
-          {{ category.label }}
-        </button>
-      </div>
-    </div>
+    <FilterChips v-model="categoryFilter" :options="categoryOptions" />
 
     <!-- راهنمای مدیر برای «مورد اعتماد ساختمان» -->
     <p
