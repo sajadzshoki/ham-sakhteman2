@@ -15,9 +15,12 @@ import type {
   ProblemCategory,
   ProblemReport,
   ProblemStatus,
+  ServiceProvider,
   UnitStatus,
 } from '~/types'
+import { serviceProviders } from '~/data/providers'
 import {
+  DEMO_BUILDING_ID,
   DEMO_MANAGER_ID,
   DEMO_RESIDENT_ID,
   seedAnnouncements,
@@ -28,6 +31,7 @@ import {
   seedMembers,
   seedPayments,
   seedProblems,
+  seedTrustedProviderIds,
   seedUnits,
 } from '~/data/seed'
 
@@ -47,6 +51,7 @@ export function useAppStore() {
   const charges = refs.charges
   const payments = refs.payments
   const expenses = refs.expenses
+  const trustedProviders = refs.trustedProviders
   const seeded = refs.seeded
 
   // ——— بذرپاشی دیتای دمو ———
@@ -84,6 +89,10 @@ export function useAppStore() {
     charges.value = [...seedCharges]
     payments.value = [...seedPayments]
     expenses.value = [...seedExpenses]
+    // «مورد اعتماد ساختمان» دمو؛ اگر کاربر قبلاً فهرستی برای این ساختمان ساخته، دست نمی‌خورد
+    if (!trustedProviders.value[DEMO_BUILDING_ID]) {
+      trustedProviders.value = { ...trustedProviders.value, [DEMO_BUILDING_ID]: [...seedTrustedProviderIds] }
+    }
     seeded.value = true
   }
 
@@ -534,6 +543,43 @@ export function useAppStore() {
     expenses.value = expenses.value.filter(item => item.id !== id)
   }
 
+  // ——— خدمات ساختمان (دایره ارائه‌دهندگان) ———
+
+  const allProviders = (): ServiceProvider[] => serviceProviders
+
+  const getProvider = (id: string): ServiceProvider | null =>
+    serviceProviders.find(provider => provider.id === id) ?? null
+
+  /** شناسه ارائه‌دهندگان «مورد اعتماد» یک ساختمان */
+  const trustedProviderIds = (buildingId: string): string[] =>
+    trustedProviders.value[buildingId] ?? []
+
+  const isProviderTrusted = (buildingId: string, providerId: string): boolean =>
+    trustedProviderIds(buildingId).includes(providerId)
+
+  /**
+   * نشان‌گذاری/برداشتن «مورد اعتماد ساختمان» توسط مدیر؛
+   * فهرست به‌صورت شناسه‌ها ذخیره می‌شود تا کوکی کوچک بماند.
+   */
+  function toggleProviderTrusted(buildingId: string, providerId: string): boolean {
+    const current = trustedProviderIds(buildingId)
+    const next = current.includes(providerId)
+      ? current.filter(id => id !== providerId)
+      : [...current, providerId]
+    trustedProviders.value = { ...trustedProviders.value, [buildingId]: next }
+    return next.includes(providerId)
+  }
+
+  /** فهرست مرتب‌شده: موارد مورد اعتماد اول و سپس امتیاز بیشتر */
+  function sortedProviders(buildingId: string): ServiceProvider[] {
+    return [...serviceProviders].sort((a, b) => {
+      const trustedA = isProviderTrusted(buildingId, a.id) ? 1 : 0
+      const trustedB = isProviderTrusted(buildingId, b.id) ? 1 : 0
+      if (trustedA !== trustedB) return trustedB - trustedA
+      return b.rating - a.rating
+    })
+  }
+
   // ——— نمای مالی ———
 
   /**
@@ -628,5 +674,11 @@ export function useAppStore() {
     createExpense,
     removeExpense,
     financialSummary,
+    allProviders,
+    getProvider,
+    trustedProviderIds,
+    isProviderTrusted,
+    toggleProviderTrusted,
+    sortedProviders,
   }
 }

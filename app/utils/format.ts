@@ -66,6 +66,16 @@ export function formatPhone(phone: string): string {
   return toPersianDigits(parts.filter(Boolean).join(' '))
 }
 
+/** لینک تماس (`tel:`) از روی شماره؛ کاراکترهای غیرعددی حذف می‌شوند */
+export function telHref(phone: string): string {
+  return `tel:${phone.replace(/[^\d+]/g, '')}`
+}
+
+/** فرمت امتیاز با یک رقم اعشار و ممیز فارسی؛ مثال: ۴٫۸ */
+export function formatRating(rating: number): string {
+  return toPersianDigits(rating.toFixed(1)).replace('.', '٫')
+}
+
 /** تبدیل ارقام فارسی/عربی به لاتین برای پردازش ورودی عددی */
 function toLatinDigits(value: string): string {
   return value

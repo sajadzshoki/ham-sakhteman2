@@ -91,7 +91,7 @@ const unitLabel = computed(() => {
 const features = [
   { title: 'مدیریت شارژ', description: 'پرداخت شفاف و به‌موقع شارژ ماهانه', icon: 'i-lucide-wallet', tint: 'bg-teal-50 text-teal-600 dark:bg-teal-400/10 dark:text-teal-300' },
   { title: 'اطلاعیه‌ها', description: 'از اخبار ساختمان جا نمانید', icon: 'i-lucide-megaphone', tint: 'bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-300' },
-  { title: 'خدمات و تعمیرات', description: 'ثبت و پیگیری درخواست‌های ساختمان', icon: 'i-lucide-wrench', tint: 'bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-300' },
+  { title: 'خدمات ساختمان', description: 'یافتن ارائه‌دهندگان خدمات و تماس مستقیم', icon: 'i-lucide-concierge-bell', tint: 'bg-sky-50 text-sky-600 dark:bg-sky-400/10 dark:text-sky-300' },
 ]
 </script>
 

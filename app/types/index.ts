@@ -118,27 +118,43 @@ export interface ProblemReport {
   updatedAt?: string
 }
 
-// ——— خدمات ———
+// ——— خدمات ساختمان (دایره ارائه‌دهندگان خدمات) ———
 
-/** وضعیت درخواست خدمات */
-export type ServiceRequestStatus = 'pending' | 'in-progress' | 'done' | 'canceled'
-
-/** دسته‌بندی خدمات */
-export type ServiceCategory =
-  | 'cleaning'
+/** دسته‌بندی ارائه‌دهنده خدمات ساختمان */
+export type ProviderCategory =
   | 'plumbing'
   | 'electrical'
-  | 'hvac'
   | 'elevator'
-  | 'security'
+  | 'cleaning'
+  | 'painting'
+  | 'cooler'
+  | 'heating'
+  | 'installations'
+  | 'glazing'
+  | 'locksmith'
+  | 'other'
 
-export interface ServiceRequest {
+/**
+ * ارائه‌دهنده خدمات ساختمان — یک آیتم دایره خدمات با جریان ساده:
+ * پیدا کن ← اطلاعات را ببین ← تماس بگیر.
+ * محتوای دایره داده پلتفرم است و «مورد اعتماد ساختمان» بودنِ آن برای هر
+ * ساختمان جداگانه در استور نگهداری می‌شود.
+ */
+export interface ServiceProvider {
   id: string
-  title: string
-  category: ServiceCategory
-  status: ServiceRequestStatus
-  createdAt: Date
-  description?: string
+  name: string
+  category: ProviderCategory
+  description: string
+  /** امتیاز از ۵؛ مثال: ۴٫۸ */
+  rating: number
+  /** شماره تماس با ارقام لاتین؛ برای لینک `tel:` */
+  phone: string
+  /** محدوده خدمات‌رسانی؛ مثال: سعادت‌آباد و شهرک غرب */
+  serviceArea: string
+  /** ساعت‌های کاری؛ مثال: شنبه تا پنجشنبه، ۸ تا ۲۰ */
+  workingHours: string
+  /** تصویر اختیاری (مسیر عمومی یا کلید مرجع `img:`) */
+  image?: string
 }
 
 // ——— احراز هویت ———

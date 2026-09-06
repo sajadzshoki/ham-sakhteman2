@@ -48,6 +48,12 @@ export default defineNuxtRouteMiddleware((to) => {
     }
   }
 
+  // خدمات ساختمان (دایره ارائه‌دهندگان): نیازمند ورود و عضویت در ساختمان
+  if (to.path === '/services' || to.path.startsWith('/services/')) {
+    if (!user.value) return navigateTo('/auth/login')
+    if (!store.buildingOfUser(user.value)) return navigateTo('/building')
+  }
+
   // صفحات داخلی ساختمان
   if (to.path.startsWith('/building/') && to.path !== '/building') {
     if (!user.value) return navigateTo('/auth/login')

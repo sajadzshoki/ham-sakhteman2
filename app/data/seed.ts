@@ -121,6 +121,9 @@ export const seedBuildings: Building[] = [
   },
 ]
 
+/** ارائه‌دهندگان «مورد اعتماد ساختمان» برای ساختمان دمو */
+export const seedTrustedProviderIds = ['sp-1', 'sp-3', 'sp-5']
+
 /** کد دعوت فعال دمو برای تست جریان پیوستن: /join?code=K7X2M9 */
 export const seedInvitations: Invitation[] = [
   {

@@ -82,6 +82,7 @@ export interface StoreRefs {
   charges: Ref<BuildingCharge[]>
   payments: Ref<ChargePayment[]>
   expenses: Ref<Expense[]>
+  trustedProviders: Ref<Record<string, string[]>>
   seeded: Ref<boolean>
 }
 
@@ -107,6 +108,7 @@ export function useStoreRefs(): StoreRefs {
       charges: useBase64JsonCookie<BuildingCharge[]>('ham-charges', []),
       payments: useBase64JsonCookie<ChargePayment[]>('ham-payments', []),
       expenses: useBase64JsonCookie<Expense[]>('ham-expenses', []),
+      trustedProviders: useBase64JsonCookie<Record<string, string[]>>('ham-trusted-providers', {}),
       seeded: useCookie<boolean>('ham-seeded', { ...COOKIE_OPTIONS, default: () => false }),
     }
   }
