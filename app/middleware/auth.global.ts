@@ -6,7 +6,12 @@ export default defineNuxtRouteMiddleware((to) => {
 
   // صفحات ورود برای کاربر لاگین‌شده در دسترس نیست
   if ((to.path === '/auth/login' || to.path === '/auth/register') && user.value) {
-    return navigateTo('/')
+    return navigateTo(user.value.role === 'superadmin' ? '/admin' : '/')
+  }
+
+  // سوپرادمین به ساختمان نمی‌پیوندد؛ خانه و پیوستن او را به مدیریت کل می‌برد
+  if (user.value?.role === 'superadmin' && (to.path === '/' || to.path === '/join')) {
+    return navigateTo('/admin')
   }
 
   // آنبردینگ: فقط مدیرِ بدون ساختمان
